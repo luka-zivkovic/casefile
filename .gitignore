@@ -1,0 +1,8 @@
+# Untracked project memory — never commit.
+.ai/
+
+node_modules/
+dist/
+*.tsbuildinfo
+*.db
+.DS_Store
