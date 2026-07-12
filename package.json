@@ -1,0 +1,33 @@
+{
+  "name": "skillguard",
+  "version": "0.1.0",
+  "description": "npm audit for agent capabilities — static trust/audit scanner for Claude Code skills and plugins.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "skillguard": "dist/cli.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "pretest": "npm run build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "commander": "^13.1.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20.17.30",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
+  }
+}
