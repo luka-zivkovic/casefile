@@ -1,10 +1,11 @@
+import { isIgnored, loadConfig } from './config.js';
 import { discover } from './discover.js';
 import { contentHash } from './hash.js';
 import { buildReport } from './report.js';
-import type { Report } from './types.js';
+import type { Finding, Report } from './types.js';
 import { walkFiles } from './walk.js';
 import { capabilityCheck } from './checks/capability.js';
-import type { CheckContext } from './checks/context.js';
+import { finding, type CheckContext } from './checks/context.js';
 import { injectionCheck } from './checks/injection.js';
 import { resourceCheck } from './checks/resources.js';
 import { structuralCheck } from './checks/structural.js';
@@ -26,9 +27,19 @@ export function scanArtifact(inputPath: string): Report {
     files: walkFiles(discovered.root),
   };
   const findings = CHECKS.flatMap((check) => check(ctx));
+
+  const config = loadConfig(discovered.root);
+  if (config.error) {
+    findings.push(finding('scan/config-invalid', 'info', config.error, 'skillguard.config.json'));
+  }
+  const active: Finding[] = [];
+  const suppressed: Finding[] = [];
+  for (const f of findings) (isIgnored(f, config) ? suppressed : active).push(f);
+
   return buildReport(
     { type: discovered.type, path: discovered.root, contentHash: contentHash(discovered.root) },
-    findings,
+    active,
     ctx.files.length,
+    suppressed,
   );
 }

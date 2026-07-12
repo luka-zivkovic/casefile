@@ -1,8 +1,21 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-export const SKIP_DIRS = new Set([
-  '.git',
+/**
+ * The ONLY directory excluded from walking (and therefore from both content
+ * checks and the content hash). Everything else — including node_modules,
+ * dist, venv — is scanned and hashed: vendored dirs are exactly where a
+ * payload would hide.
+ */
+export const SKIP_DIRS = new Set(['.git']);
+
+/**
+ * Vendored/generated dirs. Still walked, scanned by the capability /
+ * supply-chain / injection rules, and included in the content hash — but
+ * skill discovery prunes them, so the structural / resource quality rules
+ * do not add noise for third-party code.
+ */
+export const VENDORED_DIRS = new Set([
   '.impeccable',
   '.venv',
   '_work',
@@ -22,9 +35,9 @@ export interface WalkEntry {
 }
 
 /**
- * Walk all files under `root` (skipping generated/heavy dirs), without
- * following directory symlinks. Symlinked files are reported but not read
- * through by callers unless they choose to.
+ * Walk all files under `root` (skipping only `.git`), without following
+ * directory symlinks. Symlinked files are reported but not read through by
+ * callers unless they choose to.
  */
 export function walkFiles(root: string): WalkEntry[] {
   const out: WalkEntry[] = [];

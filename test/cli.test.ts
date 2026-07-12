@@ -61,6 +61,26 @@ describe('skillguard CLI', () => {
     expect(fs.readFileSync(out, 'utf-8')).toContain('skillguard report');
   });
 
+  it('excludes suppressed findings from exit-code evaluation but lists them', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-suppress-'));
+    fs.writeFileSync(
+      path.join(dir, 'SKILL.md'),
+      '---\nname: sup\ndescription: a skill with a suppressed missing-resource critical finding\n---\n\nSee references/missing.md for details.\n',
+    );
+    // Without a config the missing resource is critical -> exit 1.
+    expect(run(['scan', dir, '--db', tmpDb]).status).toBe(1);
+    fs.writeFileSync(
+      path.join(dir, 'skillguard.config.json'),
+      JSON.stringify({ ignore: [{ ruleId: 'resources/missing-resource' }] }),
+    );
+    const res = run(['scan', dir, '--json', '--db', tmpDb]);
+    expect(res.status).toBe(0);
+    const report = JSON.parse(res.stdout);
+    expect(report.summary.critical).toBe(0);
+    expect(report.suppressed.some((f: { ruleId: string }) => f.ruleId === 'resources/missing-resource')).toBe(true);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
   it('records and lists scan history', () => {
     run(['scan', fixture('benign-skill'), '--db', tmpDb]);
     const res = run(['history', fixture('benign-skill'), '--db', tmpDb, '--json']);

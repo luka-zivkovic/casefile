@@ -24,6 +24,8 @@ export interface ReportSummary {
   warning: number;
   info: number;
   total: number;
+  /** Findings suppressed via skillguard.config.json (not counted above). */
+  suppressed: number;
   filesScanned: number;
 }
 
@@ -33,6 +35,9 @@ export interface Report {
   scannedAt: string;
   artifact: Artifact;
   findings: Finding[];
+  /** Findings matched by a skillguard.config.json ignore rule: still listed,
+   * but excluded from the summary counts and exit-code evaluation. */
+  suppressed: Finding[];
   summary: ReportSummary;
 }
 

@@ -15,6 +15,18 @@ describe('parseFrontmatter', () => {
     expect(frontmatter.description).toBe('first line second line');
   });
 
+  it('captures list-form values instead of flattening them to empty', () => {
+    const text = '---\nname: x\nallowed-tools:\n  - "*"\n  - Read\n---\n';
+    const { frontmatter } = parseFrontmatter(text);
+    expect(frontmatter['allowed-tools']).toBe('*, Read');
+  });
+
+  it('captures zero-indent list items', () => {
+    const text = '---\nallowed-tools:\n- Bash\n---\n';
+    const { frontmatter } = parseFrontmatter(text);
+    expect(frontmatter['allowed-tools']).toBe('Bash');
+  });
+
   it('ignores nested maps under a non-block key', () => {
     const text = '---\nname: n8n\ncompatibility:\n  requires: node\n  version: 20\ndescription: x\n---\n';
     const { frontmatter } = parseFrontmatter(text);
