@@ -54,6 +54,20 @@ Every check emits findings of the form
 | **Capability audit** | `capability/*` | Declared `allowed-tools`; hooks that run shell commands; scripts that make network calls, `curl \| sh`, read secret env vars (API_KEY/TOKEN/SECRET), write outside the artifact, `rm -rf`, or eval/exec downloaded content |
 | **Supply-chain hygiene** | `supplychain/*` | Symlinks resolving outside the artifact; large base64/encoded blobs; unauditable binary files |
 | **Injection heuristics** | `injection/*` | "ignore previous instructions", "do not tell the user", model-addressed hidden instructions in reference files, imperatives in HTML comments, zero-width / bidi / invisible-tag unicode |
+| **Scan hygiene** | `scan/*` | Info findings about the scan itself: lines longer than 2000 chars truncated for line-based checks (`scan/line-truncated`), unreadable files skipped (`scan/unreadable-file`), files over 5 MB skipped for content checks (`scan/file-too-large`), invalid suppression config (`scan/config-invalid`) |
+
+### What gets scanned
+
+Everything under the artifact root **except `.git`** is content-scanned and
+hashed — including vendored/generated dirs like `node_modules`, `dist`,
+`build`, `venv`: those are exactly where a payload would hide. The capability,
+supply-chain, and injection rules apply there at full severity. Only skill
+*discovery* (and therefore the structural/resource quality rules) prunes
+vendored dirs, so third-party code does not generate style noise.
+
+Untrusted content quoted in finding messages is sanitized (newlines/tabs
+collapsed, ANSI escapes and control characters stripped) so a scanned artifact
+cannot forge report lines or emit terminal escape sequences.
 
 The frontmatter parser and the structural/resource checks are ported faithfully
 from the overclock repo's `validate_skill.py` and `audit_skills.py`, preserving
@@ -74,12 +88,39 @@ Reports are versioned (`reportVersion: 1`):
     "contentHash": "<sha256 over the sorted per-file sha256 hashes>"
   },
   "findings": [ /* sorted critical-first */ ],
-  "summary": { "critical": 8, "warning": 12, "info": 1, "total": 21, "filesScanned": 7 }
+  "suppressed": [ /* findings ignored via skillguard.config.json */ ],
+  "summary": { "critical": 8, "warning": 12, "info": 1, "total": 21, "suppressed": 0, "filesScanned": 7 }
 }
 ```
 
-`contentHash` is a stable fingerprint of the artifact's bytes (symlinks
-contribute their target, not their contents), so a re-scan detects any change.
+`contentHash` is a stable fingerprint of the artifact's bytes covering
+everything except `.git` (symlinks contribute their target, not their
+contents; files over 5 MB are fingerprinted by size+name), so a re-scan
+detects any change — including changes inside `node_modules` and other
+vendored dirs.
+
+## Suppressing findings (CI)
+
+To accept a known finding without failing CI, put a `skillguard.config.json`
+in the scanned artifact's root or in the directory you run skillguard from
+(the artifact's own config wins):
+
+```json
+{
+  "ignore": [
+    { "ruleId": "capability/network-call", "path": "scripts/" },
+    { "ruleId": "supplychain/binary-file" }
+  ]
+}
+```
+
+- `ruleId` is required; `path` is an optional **prefix** match against the
+  finding's file path (relative to the artifact root). No globs.
+- Ignored findings are excluded from the summary counts and from `--fail-on`
+  exit-code evaluation, but stay listed in the report under `suppressed` so
+  they remain visible in review.
+- An artifact can ship its own config: review `suppressed` (and the config
+  file itself) when auditing third-party artifacts.
 
 ## Exit codes
 
