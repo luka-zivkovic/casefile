@@ -83,16 +83,19 @@ function scanText(text: string, relFile: string, context: string): Finding[] {
     const trimmed = line.trim();
     if (trimmed.startsWith('#') && !trimmed.startsWith('#!')) continue; // shell/python comments
     if (trimmed.startsWith('//')) continue;
+    // A pipe-to-shell / eval-download match on THIS line subsumes the generic
+    // network-call rule for THIS line only (other lines still report freely).
+    let networkSubsumedHere = false;
     for (const rule of LINE_RULES) {
+      if (rule.ruleId === 'capability/network-call' && networkSubsumedHere) continue;
       if (seen.has(rule.ruleId)) continue;
       if (rule.pattern.test(line)) {
         seen.add(rule.ruleId);
         findings.push(finding(rule.ruleId, rule.severity, `${context} ${rule.message}`, relFile, i + 1));
-        // Don't let the generic network rule double-report a pipe-to-shell line.
         if (rule.ruleId === 'capability/pipe-to-shell' || rule.ruleId === 'capability/eval-download') {
-          seen.add('capability/network-call');
+          networkSubsumedHere = true;
         }
-        }
+      }
     }
   }
   return findings;
