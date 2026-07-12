@@ -7,7 +7,10 @@
  * - Only top-level `key:` lines become entries.
  * - A value that is exactly a block-scalar indicator (`>`, `|`, `>-`, `|-`, `>+`, `|+`)
  *   starts a block scalar; subsequent indented lines are joined with single spaces.
- * - Indented lines under a non-block key (nested maps/lists) are opaque and ignored.
+ * - List items (`- value`) under a key with an empty value are captured and
+ *   joined with `, ` — so `allowed-tools:\n  - "*"` yields `allowed-tools: "*"`
+ *   and cannot bypass checks that inspect the value.
+ * - Indented lines under a non-block key (nested maps) are opaque and ignored.
  * - Surrounding single/double quotes on plain values are stripped.
  */
 
@@ -48,13 +51,23 @@ export function parseFrontmatter(text: string): ParsedSkill {
   const data: Record<string, string> = {};
   let cur: string | null = null;
   let inBlock = false;
+  let inList = false;
   for (const line of lines.slice(1, end)) {
     if (!line.trim()) continue;
+    // A list item under the current key: `- value` (indented or not).
+    const li = /^\s*-\s+(.*)$/.exec(line);
+    if (li && cur !== null && !inBlock && (inList || data[cur] === '')) {
+      const item = stripQuotes(li[1].trim());
+      data[cur] = data[cur] === '' ? item : `${data[cur]}, ${item}`;
+      inList = true;
+      continue;
+    }
     const m = /^(\S[^:]*?):(.*)$/.exec(line);
     if (m && !/^\s/.test(line)) {
       // A top-level key.
       const key = m[1].trim();
       const val = m[2].trim();
+      inList = false;
       if (BLOCK_SCALAR.has(val)) {
         data[key] = '';
         cur = key;
@@ -68,7 +81,7 @@ export function parseFrontmatter(text: string): ParsedSkill {
       // Continuation of a block scalar.
       data[cur] = (data[cur] + ' ' + line.trim()).trim();
     }
-    // else: nested map/list under a non-block key — opaque, ignored.
+    // else: nested map under a non-block key — opaque, ignored.
   }
   return { frontmatter: data, body: lines.slice(end + 1).join('\n'), bodyStartLine: end + 2 };
 }

@@ -9,7 +9,7 @@ import * as path from 'node:path';
 import { parseFrontmatter } from '../frontmatter.js';
 import type { Finding } from '../types.js';
 import { isBinaryFile } from '../walk.js';
-import { finding, relTo, type CheckContext } from './context.js';
+import { finding, readTextChecked, relTo, splitLinesCapped, truncationFinding, type CheckContext } from './context.js';
 
 const SCRIPT_EXTENSIONS = new Set([
   '.sh', '.bash', '.zsh', '.py', '.js', '.mjs', '.cjs', '.ts', '.rb', '.pl', '.ps1',
@@ -18,8 +18,59 @@ const SCRIPT_EXTENSIONS = new Set([
 interface LineRule {
   ruleId: string;
   severity: 'critical' | 'warning';
-  pattern: RegExp;
+  /** Exactly one of pattern / matcher is set. Matchers are plain code for rules
+   * whose natural regex would need nested quantifiers (ReDoS risk). */
+  pattern?: RegExp;
+  matcher?: (line: string) => boolean;
   message: string;
+}
+
+interface RmInvocation {
+  recursive: boolean;
+  force: boolean;
+  /** Target is `/`, `~`, `~/`, `$HOME` or `${HOME}` (optionally with a trailing slash path for $HOME). */
+  dangerousTarget: boolean;
+}
+
+/**
+ * Analyze `rm` invocations on a line in plain code instead of a regex: the
+ * regex form needs nested quantifiers over overlapping character classes
+ * (`(-[a-zA-Z]*[rR][a-zA-Z]*\s+)*...`) which is catastrophically backtracking
+ * (a ~200-char `rm -rar -rar ...` line hangs the scanner). Tokenizing and
+ * inspecting flag tokens iteratively is strictly linear.
+ */
+function analyzeRmInvocations(line: string): RmInvocation[] {
+  const out: RmInvocation[] = [];
+  const tokens = line.split(/\s+/);
+  for (let i = 0; i < tokens.length; i++) {
+    // `rm` as its own token, or trailing a shell separator (e.g. `foo&&rm`).
+    if (tokens[i] !== 'rm' && !/(^|[;&|(`])rm$/.test(tokens[i])) continue;
+    const inv: RmInvocation = { recursive: false, force: false, dangerousTarget: false };
+    for (let j = i + 1; j < tokens.length; j++) {
+      const tok = tokens[j];
+      if (tok === '--recursive') { inv.recursive = true; continue; }
+      if (tok === '--force') { inv.force = true; continue; }
+      if (tok === '--') continue;
+      if (/^-[a-zA-Z]+$/.test(tok)) {
+        if (/[rR]/.test(tok)) inv.recursive = true;
+        if (tok.includes('f')) inv.force = true;
+        continue;
+      }
+      // First non-flag token is the delete target.
+      const target = tok.replace(/^["']+|["']+$/g, '');
+      inv.dangerousTarget =
+        target === '/' ||
+        target === '~' ||
+        target === '~/' ||
+        target === '$HOME' ||
+        target.startsWith('$HOME/') ||
+        target === '${HOME}' ||
+        target.startsWith('${HOME}/');
+      break;
+    }
+    out.push(inv);
+  }
+  return out;
 }
 
 // Order matters: the first matching rule in a category wins per line, and
@@ -56,13 +107,13 @@ const LINE_RULES: LineRule[] = [
   {
     ruleId: 'capability/destructive-delete',
     severity: 'critical',
-    pattern: /\brm\s+(-[a-zA-Z]*[rR][a-zA-Z]*\s+)*-?[a-zA-Z]*[rR][a-zA-Z]*f[a-zA-Z]*\s+["']?(\/(\s|$|["'])|\$HOME\b|~\/?(\s|$))/,
+    matcher: (line) => analyzeRmInvocations(line).some((rm) => rm.recursive && rm.force && rm.dangerousTarget),
     message: 'recursive force-delete of a root or home directory',
   },
   {
     ruleId: 'capability/rm-rf',
     severity: 'warning',
-    pattern: /\brm\s+(-[a-zA-Z]*)*-[a-zA-Z]*(rf|fr)[a-zA-Z]*\b/,
+    matcher: (line) => analyzeRmInvocations(line).some((rm) => rm.recursive && rm.force),
     message: 'uses rm -rf (recursive force delete)',
   },
   {
@@ -77,7 +128,8 @@ const LINE_RULES: LineRule[] = [
 function scanText(text: string, relFile: string, context: string): Finding[] {
   const findings: Finding[] = [];
   const seen = new Set<string>(); // one finding per (rule, file)
-  const lines = text.split(/\r?\n/);
+  const { lines, truncatedLines } = splitLinesCapped(text);
+  if (truncatedLines.length > 0) findings.push(truncationFinding(relFile, truncatedLines));
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
@@ -89,7 +141,7 @@ function scanText(text: string, relFile: string, context: string): Finding[] {
     for (const rule of LINE_RULES) {
       if (rule.ruleId === 'capability/network-call' && networkSubsumedHere) continue;
       if (seen.has(rule.ruleId)) continue;
-      if (rule.pattern.test(line)) {
+      if (rule.matcher ? rule.matcher(line) : rule.pattern!.test(line)) {
         seen.add(rule.ruleId);
         findings.push(finding(rule.ruleId, rule.severity, `${context} ${rule.message}`, relFile, i + 1));
         if (rule.ruleId === 'capability/pipe-to-shell' || rule.ruleId === 'capability/eval-download') {
@@ -209,7 +261,8 @@ export function capabilityCheck(ctx: CheckContext): Finding[] {
     if (entry.isSymlink) continue;
     if (!isScriptFile(entry.abs, entry.rel)) continue;
     if (isBinaryFile(entry.abs)) continue;
-    const text = fs.readFileSync(entry.abs, 'utf-8');
+    const text = readTextChecked(entry, findings);
+    if (text === null) continue;
     findings.push(...scanText(text, entry.rel, 'bundled script'));
   }
 

@@ -21,7 +21,14 @@ function checkSkill(ctx: CheckContext, skillDir: string, plugin?: string): Findi
     return [finding('structural/skill-md-missing', 'critical', 'SKILL.md does not exist', relSkill)];
   }
 
-  const text = fs.readFileSync(skillFile, 'utf-8');
+  let text: string;
+  try {
+    text = fs.readFileSync(skillFile, 'utf-8');
+  } catch (err) {
+    return [
+      finding('scan/unreadable-file', 'info', `SKILL.md could not be read and was skipped: ${(err as Error).message}`, relSkill),
+    ];
+  }
   let fm: Record<string, string>;
   let body: string;
   try {

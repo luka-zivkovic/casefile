@@ -6,7 +6,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { Finding } from '../types.js';
 import { isBinaryFile } from '../walk.js';
-import { finding, type CheckContext } from './context.js';
+import { finding, readTextChecked, splitLinesCapped, truncationFinding, type CheckContext } from './context.js';
 
 const BASE64_RUN = /[A-Za-z0-9+/]{200,}={0,2}/;
 /** Media/document formats that are expected to be binary; still reported, but as info. */
@@ -60,13 +60,10 @@ export function supplyChainCheck(ctx: CheckContext): Finding[] {
     }
 
     // Large base64-like runs in text files (possible encoded payloads).
-    let text: string;
-    try {
-      text = fs.readFileSync(entry.abs, 'utf-8');
-    } catch {
-      continue;
-    }
-    const lines = text.split(/\r?\n/);
+    const text = readTextChecked(entry, findings);
+    if (text === null) continue;
+    const { lines, truncatedLines } = splitLinesCapped(text);
+    if (truncatedLines.length > 0) findings.push(truncationFinding(entry.rel, truncatedLines));
     for (let i = 0; i < lines.length; i++) {
       const m = BASE64_RUN.exec(lines[i]);
       if (m) {

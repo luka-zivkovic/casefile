@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { ArtifactType, PluginRef, SkillRef } from './types.js';
-import { SKIP_DIRS } from './walk.js';
+import { SKIP_DIRS, VENDORED_DIRS } from './walk.js';
 
 export class DiscoveryError extends Error {}
 
@@ -34,7 +34,12 @@ function isMarketplaceRoot(dir: string): boolean {
   }
 }
 
-/** Find every real SKILL.md under `root`, pruning generated/heavy dirs. */
+/**
+ * Find every real SKILL.md under `root`, pruning `.git` and vendored dirs.
+ * A SKILL.md inside node_modules etc. is third-party code: its files are
+ * still content-scanned and hashed, but it is not treated as one of the
+ * artifact's own skills for structural/resource quality rules.
+ */
 function findSkillDirs(root: string): string[] {
   const found: string[] = [];
   const walk = (dir: string) => {
@@ -46,7 +51,7 @@ function findSkillDirs(root: string): string[] {
     }
     if (entries.some((e) => e.isFile() && e.name === 'SKILL.md')) found.push(dir);
     for (const e of entries) {
-      if (e.isDirectory() && !e.isSymbolicLink() && !SKIP_DIRS.has(e.name)) {
+      if (e.isDirectory() && !e.isSymbolicLink() && !SKIP_DIRS.has(e.name) && !VENDORED_DIRS.has(e.name)) {
         walk(path.join(dir, e.name));
       }
     }

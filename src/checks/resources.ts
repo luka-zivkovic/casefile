@@ -22,7 +22,12 @@ export function resourceCheck(ctx: CheckContext): Finding[] {
     const skillFile = path.join(skill.dir, 'SKILL.md');
     if (!fs.existsSync(skillFile)) continue;
     const relSkill = relTo(ctx.root, skillFile);
-    const text = fs.readFileSync(skillFile, 'utf-8');
+    let text: string;
+    try {
+      text = fs.readFileSync(skillFile, 'utf-8');
+    } catch {
+      continue; // unreadable SKILL.md is reported by the structural check
+    }
     let body = text;
     try {
       ({ body } = parseFrontmatter(text));
