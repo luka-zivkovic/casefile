@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/jarrodwatts__claude-hud
+# skillguard report — jarrodwatts/claude-hud
 
 - Artifact type: plugin
 - Content hash: sha256:85ed873a11a31b4677644f6013c81f17d0b683d077197515ea89ab7eb1385f9d

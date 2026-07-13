@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/SawyerHood__dev-browser
+# skillguard report — SawyerHood/dev-browser
 
 - Artifact type: marketplace
 - Content hash: sha256:e29a0b10b45d80b041a71518d8112c73a8a3216d733d31c75eef4902f807a056

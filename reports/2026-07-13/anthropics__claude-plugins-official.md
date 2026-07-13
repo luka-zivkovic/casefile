@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/anthropics__claude-plugins-official
+# skillguard report — anthropics/claude-plugins-official
 
 - Artifact type: marketplace
 - Content hash: sha256:36f981afd80800bdc96fa885c6fb7539773a046013f10dd3b5cc142d68c40fde

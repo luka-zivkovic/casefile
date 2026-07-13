@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/anthropics__skills
+# skillguard report — anthropics/skills
 
 - Artifact type: marketplace
 - Content hash: sha256:a6a9f563eb8c6332ac66f7c6c227c4175124f6f92c48e8e71841d2a58f332643

@@ -50,7 +50,9 @@ with a regression test distilled from the failing input:
    `"${unsupportedToken.toSource()}"`, labeling a CSS parser a secret reader. Found via
    SawyerHood/dev-browser. Fix: shell expansions must be `UPPER_CASE` to match; explicit
    `process.env`/`os.environ`/`getenv` reads remain case-insensitive. (−37 false warnings
-   corpus-wide; all true positives retained.)
+   corpus-wide; uppercase-convention shell TPs retained.) Trade-off: lowercase shell expansions
+   like `${secret_password}` are now intentional false negatives; explicit env-API reads still
+   catch them regardless of case.
 
 No crashes, hangs, or frontmatter parser failures were found: the parser was additionally
 stress-run against all 5,316 `SKILL.md` files in the corpus with zero exceptions and zero

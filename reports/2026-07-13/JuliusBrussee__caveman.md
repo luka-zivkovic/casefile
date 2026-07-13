@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/JuliusBrussee__caveman
+# skillguard report — JuliusBrussee/caveman
 
 - Artifact type: plugin
 - Content hash: sha256:358899203b4dd842a8eef21d392747c2c2265c131e54556ce6e10715e0a90a28

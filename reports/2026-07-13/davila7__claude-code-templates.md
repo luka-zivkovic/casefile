@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/davila7__claude-code-templates/cli-tool/components
+# skillguard report — davila7/claude-code-templates/cli-tool/components
 
 - Artifact type: marketplace
 - Content hash: sha256:d3622e341932a33f1bca65e518cd56cb49c7e4cc38039686ecf377e928a55bcd

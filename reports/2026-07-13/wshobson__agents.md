@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/wshobson__agents
+# skillguard report — wshobson/agents
 
 - Artifact type: marketplace
 - Content hash: sha256:295c42e24b0c09b11e5fc9ffec1203bd092abed8e8582092d5d07bab00811214

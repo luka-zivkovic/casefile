@@ -183,6 +183,27 @@ describe('real-world hardening regressions', () => {
     rm(hiddenDir);
   });
 
+  it('does not flag skin-tone-modified emoji ZWJ sequences, but still flags ZWJ between letters', () => {
+    // Real-world shape: "\u{1F469}\u{1F3FD}‍\u{1F4BB}" — the ZWJ follows a
+    // skin-tone modifier (U+1F3FB–FF), which is Emoji_Component rather than
+    // Extended_Pictographic, so a naive pictographic check misses it.
+    const toneDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-zwj-tone-'));
+    fs.writeFileSync(
+      path.join(toneDir, 'SKILL.md'),
+      '---\nname: zwjtone\ndescription: a skill whose docs contain skin-tone emoji joiner sequences\n---\n\n## \u{1F469}\u{1F3FD}‍\u{1F4BB} Maintainers\n',
+    );
+    expect(ids(scanArtifact(toneDir).findings).has('injection/zero-width-unicode')).toBe(false);
+    rm(toneDir);
+
+    const lettersDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-zwj-letters-'));
+    fs.writeFileSync(
+      path.join(lettersDir, 'SKILL.md'),
+      '---\nname: zwjletters\ndescription: a skill hiding a joiner between ordinary letters\n---\n\nhid‍den instructions here.\n',
+    );
+    expect(ids(scanArtifact(lettersDir).findings).has('injection/zero-width-unicode')).toBe(true);
+    rm(lettersDir);
+  });
+
   it('does not flag lowercase JS template interpolations as secret env reads', () => {
     // Real-world shape: `${tokens.join(", ")}` in a bundled TS/JS helper
     // (seen in SawyerHood/dev-browser stringUtils.ts).
@@ -198,11 +219,14 @@ describe('real-world hardening regressions', () => {
     );
     expect(ids(scanArtifact(dir).findings).has('capability/secret-env-read')).toBe(false);
 
-    // Uppercase shell expansions and explicit env APIs must still be flagged.
+    // Uppercase shell expansions must still be flagged.
     fs.writeFileSync(path.join(dir, 'scripts', 'push.sh'), 'echo "auth: ${GITHUB_TOKEN}"\n');
+    expect(ids(scanArtifact(dir).findings).has('capability/secret-env-read')).toBe(true);
+    fs.rmSync(path.join(dir, 'scripts', 'push.sh'));
+
+    // Explicit env-API reads must still be flagged, independently of the shell probe.
     fs.writeFileSync(path.join(dir, 'scripts', 'client.js'), 'const key = process.env.apiKey;\n');
-    const found = ids(scanArtifact(dir).findings);
-    expect(found.has('capability/secret-env-read')).toBe(true);
+    expect(ids(scanArtifact(dir).findings).has('capability/secret-env-read')).toBe(true);
     rm(dir);
   });
 });

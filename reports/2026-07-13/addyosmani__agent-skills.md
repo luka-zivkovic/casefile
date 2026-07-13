@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/addyosmani__agent-skills
+# skillguard report — addyosmani/agent-skills
 
 - Artifact type: plugin
 - Content hash: sha256:718d6d13d203a59803375f94e05e7782313da88dac25b1d50c342d9e324a35b6

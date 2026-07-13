@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/alirezarezvani__claude-skills
+# skillguard report — alirezarezvani/claude-skills
 
 - Artifact type: marketplace
 - Content hash: sha256:91c7c14033de9be35e1f5eda8e8d3840d43a3550c943965d463f2b324c8e1e8c

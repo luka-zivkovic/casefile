@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/Jeffallan__claude-skills
+# skillguard report — Jeffallan/claude-skills
 
 - Artifact type: plugin
 - Content hash: sha256:ca5d8a392344469fb1962166872b6565bb38667ab041261fb59a86a9c3ef38d6

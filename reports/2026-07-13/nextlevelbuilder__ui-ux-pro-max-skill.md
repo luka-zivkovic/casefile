@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/nextlevelbuilder__ui-ux-pro-max-skill
+# skillguard report — nextlevelbuilder/ui-ux-pro-max-skill
 
 - Artifact type: plugin
 - Content hash: sha256:5fa4e99cd401556bd28a0ed77aaf0dba571b5ab29ac295b37a5202d400562f6f

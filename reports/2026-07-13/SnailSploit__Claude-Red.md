@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/SnailSploit__Claude-Red/Skills/recon/offensive-osint
+# skillguard report — SnailSploit/Claude-Red/Skills/recon/offensive-osint
 
 - Artifact type: skill
 - Content hash: sha256:1de6cf2447129eebd98a4e0a31b895b7fd0943e26f478fcc279f3e55fc76bd94

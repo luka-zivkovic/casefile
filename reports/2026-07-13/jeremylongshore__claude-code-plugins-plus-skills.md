@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/jeremylongshore__claude-code-plugins-plus-skills
+# skillguard report — jeremylongshore/claude-code-plugins-plus-skills
 
 - Artifact type: marketplace
 - Content hash: sha256:bfd898bd1999b80dff1b9dc9199d5cd5fc5036238d03df96239190ff0b211ccb

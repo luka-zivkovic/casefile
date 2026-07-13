@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/mvanhorn__last30days-skill
+# skillguard report — mvanhorn/last30days-skill
 
 - Artifact type: plugin
 - Content hash: sha256:4f5585e495a87ff266f64fb0845675dec093aa80ad4d2006f0a4cb0dea2f6229

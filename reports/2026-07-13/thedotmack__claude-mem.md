@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/thedotmack__claude-mem
+# skillguard report — thedotmack/claude-mem
 
 - Artifact type: plugin
 - Content hash: sha256:4c64de0e6d8f08de62acf4b70dbb8de68de0db6dfab3d4c758ed2ecd44767d6f

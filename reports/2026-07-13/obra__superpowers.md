@@ -1,4 +1,4 @@
-# skillguard report — /private/tmp/skillguard-corpus/obra__superpowers
+# skillguard report — obra/superpowers
 
 - Artifact type: plugin
 - Content hash: sha256:3c6b8a7f9ccb6b99cb142810de137d7665bdbb185a926169dcc9ce57892dd5e7
