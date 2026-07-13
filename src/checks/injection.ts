@@ -33,6 +33,17 @@ const MODEL_ADDRESSED =
   /\b(claude|the assistant|the model|the ai|ai model|language model)\b[^.\n]{0,80}\b(must not|should not|never|secretly|silently|without (the )?user)/i;
 
 const ZERO_WIDTH = /[\u200B\u200C\u200D\u2060\uFEFF\u00AD]/g;
+/** Pictographic (optionally with a variation selector) directly before/after an index. */
+const EMOJI_BEFORE = /\p{Extended_Pictographic}\uFE0F?$/u;
+const EMOJI_AFTER = /^\p{Extended_Pictographic}/u;
+
+/** True when the char at `index` is a U+200D ZWJ acting as an emoji joiner
+ * (person + ZWJ + laptop etc.), which is visible, standard unicode rather
+ * than a hidden-text carrier. */
+function isEmojiZwj(text: string, index: number): boolean {
+  if (text[index] !== '\u200D') return false;
+  return EMOJI_BEFORE.test(text.slice(Math.max(0, index - 8), index)) && EMOJI_AFTER.test(text.slice(index + 1, index + 9));
+}
 const BIDI_CONTROL = /[\u202A-\u202E\u2066-\u2069]/g;
 /** Unicode "tag" characters (U+E0000–E007F): invisible ASCII mirror used for hidden prompts. */
 const TAG_CHARS = /[\u{E0000}-\u{E007F}]/gu;
@@ -110,9 +121,10 @@ export function injectionCheck(ctx: CheckContext): Finding[] {
       }
     }
 
-    // 4. Zero-width / invisible unicode (a single leading BOM is benign).
+    // 4. Zero-width / invisible unicode (a single leading BOM is benign, and
+    //    a ZWJ inside an emoji sequence is visible content, not hidden text).
     const zwMatches = [...text.matchAll(ZERO_WIDTH)].filter(
-      (m) => !(m.index === 0 && m[0] === '\uFEFF'),
+      (m) => !(m.index === 0 && m[0] === '\uFEFF') && !isEmojiZwj(text, m.index ?? 0),
     );
     if (zwMatches.length > 0) {
       findings.push(

@@ -146,3 +146,63 @@ describe('structural checks', () => {
     rm(dir);
   });
 });
+
+// Regressions distilled from scanning real public skill/plugin repos.
+describe('real-world hardening regressions', () => {
+  it('does not report a referenced resource directory that exists as missing', () => {
+    // Real-world shape: SKILL.md says "helpers live in scripts/lib/" and ships
+    // that directory (seen in mvanhorn/last30days-skill).
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-resdir-'));
+    fs.mkdirSync(path.join(dir, 'scripts', 'lib'), { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, 'SKILL.md'),
+      '---\nname: resdir\ndescription: references a bundled directory of helper scripts\n---\n\nShared helpers live in scripts/lib/ next to this file.\n',
+    );
+    const report = scanArtifact(dir);
+    expect(ids(report.findings).has('resources/missing-resource')).toBe(false);
+    rm(dir);
+  });
+
+  it('does not flag emoji ZWJ sequences as zero-width unicode, but still flags bare ZWJ/ZWSP', () => {
+    // Real-world shape: READMEs full of emoji like "\u{1F9D1}‍\u{1F4BB}"
+    // (seen in anthropics/claude-plugins-official telegram docs).
+    const emojiDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-zwj-'));
+    fs.writeFileSync(
+      path.join(emojiDir, 'SKILL.md'),
+      '---\nname: zwj\ndescription: a skill whose docs contain emoji joiner sequences\n---\n\n## \u{1F468}‍\u{1F4BB} Maintainers \u{1F937}‍♂️\n',
+    );
+    expect(ids(scanArtifact(emojiDir).findings).has('injection/zero-width-unicode')).toBe(false);
+    rm(emojiDir);
+
+    const hiddenDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-zwsp-'));
+    fs.writeFileSync(
+      path.join(hiddenDir, 'SKILL.md'),
+      '---\nname: zwsp\ndescription: a skill hiding characters between letters\n---\n\nno‍tice the hid​den joiners here.\n',
+    );
+    expect(ids(scanArtifact(hiddenDir).findings).has('injection/zero-width-unicode')).toBe(true);
+    rm(hiddenDir);
+  });
+
+  it('does not flag lowercase JS template interpolations as secret env reads', () => {
+    // Real-world shape: `${tokens.join(", ")}` in a bundled TS/JS helper
+    // (seen in SawyerHood/dev-browser stringUtils.ts).
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-envfp-'));
+    fs.mkdirSync(path.join(dir, 'scripts'), { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, 'SKILL.md'),
+      '---\nname: envfp\ndescription: ships a formatting helper script with template literals\n---\n\nRun scripts/format.js to format output.\n',
+    );
+    fs.writeFileSync(
+      path.join(dir, 'scripts', 'format.js'),
+      'const tokens = ["a", "b"];\nmodule.exports = () => `{ ${tokens.join(", ")} }`;\n',
+    );
+    expect(ids(scanArtifact(dir).findings).has('capability/secret-env-read')).toBe(false);
+
+    // Uppercase shell expansions and explicit env APIs must still be flagged.
+    fs.writeFileSync(path.join(dir, 'scripts', 'push.sh'), 'echo "auth: ${GITHUB_TOKEN}"\n');
+    fs.writeFileSync(path.join(dir, 'scripts', 'client.js'), 'const key = process.env.apiKey;\n');
+    const found = ids(scanArtifact(dir).findings);
+    expect(found.has('capability/secret-env-read')).toBe(true);
+    rm(dir);
+  });
+});
