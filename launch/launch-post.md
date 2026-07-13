@@ -9,7 +9,7 @@ network calls, and read files across your project. Almost all of that is fine. T
 
 So we built a static scanner for exactly that artifact — skills, plugins, marketplaces — and
 pointed it at 16 of the most-installed collections on GitHub, from Anthropic's own directory down
-to community marketplaces with hundreds of plugins. About 34,000 files. Here's what came back.
+to community marketplaces with hundreds of plugins. About 33,000 files. Here's what came back.
 
 ## The headline: it's mostly fine, and the exceptions are worth reading
 
