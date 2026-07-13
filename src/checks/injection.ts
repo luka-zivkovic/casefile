@@ -33,9 +33,11 @@ const MODEL_ADDRESSED =
   /\b(claude|the assistant|the model|the ai|ai model|language model)\b[^.\n]{0,80}\b(must not|should not|never|secretly|silently|without (the )?user)/i;
 
 const ZERO_WIDTH = /[\u200B\u200C\u200D\u2060\uFEFF\u00AD]/g;
-/** Pictographic (optionally with a variation selector) directly before/after an index. */
-const EMOJI_BEFORE = /\p{Extended_Pictographic}\uFE0F?$/u;
-const EMOJI_AFTER = /^\p{Extended_Pictographic}/u;
+/** Pictographic (optionally with a variation selector) directly before/after an index.
+ * Skin-tone modifiers (U+1F3FB\u2013U+1F3FF) are Emoji_Component, not Extended_Pictographic,
+ * so they must be matched explicitly (e.g. the ZWJ in \uD83D\uDC69\uD83C\uDFFD\u200D\uD83D\uDCBB follows a skin tone). */
+const EMOJI_BEFORE = /(\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}])\uFE0F?$/u;
+const EMOJI_AFTER = /^(\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}])/u;
 
 /** True when the char at `index` is a U+200D ZWJ acting as an emoji joiner
  * (person + ZWJ + laptop etc.), which is visible, standard unicode rather
