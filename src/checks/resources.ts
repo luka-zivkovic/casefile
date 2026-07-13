@@ -53,13 +53,16 @@ export function resourceCheck(ctx: CheckContext): Finding[] {
     }
     for (const rel of [...referenced].sort()) {
       const target = path.join(skill.dir, rel);
-      let isFile = false;
+      // A referenced resource may legitimately be a directory (`scripts/lib/`),
+      // so an existing directory counts as present.
+      let exists = false;
       try {
-        isFile = fs.statSync(target).isFile();
+        const st = fs.statSync(target);
+        exists = st.isFile() || st.isDirectory();
       } catch {
-        isFile = false;
+        exists = false;
       }
-      if (!isFile) {
+      if (!exists) {
         findings.push(
           finding('resources/missing-resource', 'critical', `referenced resource is missing: ${rel}`, relSkill),
         );

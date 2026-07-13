@@ -100,8 +100,15 @@ const LINE_RULES: LineRule[] = [
   {
     ruleId: 'capability/secret-env-read',
     severity: 'warning',
-    pattern:
-      /(\$\{?[A-Z0-9_]*(API_?KEY|TOKEN|SECRET|PASSW(OR)?D|CREDENTIALS?)[A-Z0-9_]*\}?)|((process\.env|os\.environ|getenv)\s*[[(.]?\s*['"`]?[A-Za-z0-9_]*(API_?KEY|TOKEN|SECRET|PASSW(OR)?D|CREDENTIALS?)[A-Za-z0-9_]*)/i,
+    // Two cases with different case rules: `$FOO_TOKEN` shell expansions must be
+    // UPPER_CASE (a case-insensitive match here fires on ordinary JS template
+    // literals like `${tokens.join(', ')}`), while explicit env APIs
+    // (process.env / os.environ / getenv) may use any casing.
+    matcher: (line) =>
+      /\$\{?[A-Z0-9_]*(API_?KEY|TOKEN|SECRET|PASSW(OR)?D|CREDENTIALS?)[A-Z0-9_]*\}?/.test(line) ||
+      /(process\.env|os\.environ|getenv)\s*[[(.]?\s*['"`]?[A-Za-z0-9_]*(API_?KEY|TOKEN|SECRET|PASSW(OR)?D|CREDENTIALS?)[A-Za-z0-9_]*/i.test(
+        line,
+      ),
     message: 'reads a secret-looking environment variable (API key / token / secret)',
   },
   {
