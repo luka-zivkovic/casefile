@@ -35,7 +35,7 @@ Entirely your call.
 We frame every finding as a signal for human review, not a verdict. Planning to post around
 [DATE] — happy to send the full report ahead of time or adjust timing.
 
-— [name], skill-guard
+— [name], casefile
 
 ---
 

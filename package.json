@@ -1,13 +1,14 @@
 {
-  "name": "skillguard",
+  "name": "casefile",
   "version": "0.1.0",
-  "description": "npm audit for agent capabilities — static trust/audit scanner for Claude Code skills and plugins.",
+  "description": "npm audit for agent capabilities \u2014 static trust/audit scanner for agent skills, plugins, and marketplaces.",
   "license": "MIT",
   "type": "module",
   "engines": {
     "node": ">=20"
   },
   "bin": {
+    "casefile": "dist/cli.js",
     "skillguard": "dist/cli.js"
   },
   "main": "dist/index.js",
@@ -29,5 +30,9 @@
     "@types/node": "^20.17.30",
     "typescript": "^5.8.3",
     "vitest": "^3.1.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luka-zivkovic/casefile.git"
   }
 }

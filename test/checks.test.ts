@@ -32,7 +32,7 @@ describe('malicious plugin', () => {
 
   // Stage a copy and add an escaping symlink that cannot be committed to git.
   staged = stageFixture('malicious-plugin');
-  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-outside-'));
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-outside-'));
   fs.writeFileSync(path.join(outside, 'secret.txt'), 'top secret\n');
   fs.symlinkSync(path.join(outside, 'secret.txt'), path.join(staged, 'skills', 'helper', 'link-to-secret'));
   report = scanArtifact(staged);
@@ -114,7 +114,7 @@ describe('malicious plugin', () => {
 
 describe('structural checks', () => {
   it('flags a missing SKILL.md', () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-empty-'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-empty-'));
     fs.mkdirSync(path.join(dir, '.claude-plugin'), { recursive: true });
     fs.writeFileSync(path.join(dir, '.claude-plugin', 'plugin.json'), '{"name":"x","version":"1.0.0"}');
     const report = scanArtifact(dir);
@@ -125,7 +125,7 @@ describe('structural checks', () => {
   });
 
   it('flags invalid plugin.json as critical', () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-badjson-'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-badjson-'));
     fs.mkdirSync(path.join(dir, '.claude-plugin'), { recursive: true });
     fs.writeFileSync(path.join(dir, '.claude-plugin', 'plugin.json'), '{ not json');
     const report = scanArtifact(dir);
@@ -135,7 +135,7 @@ describe('structural checks', () => {
   });
 
   it('flags a missing referenced resource as critical', () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-res-'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-res-'));
     fs.writeFileSync(
       path.join(dir, 'SKILL.md'),
       '---\nname: res\ndescription: a skill referencing a resource that does not exist for testing\n---\n\nSee references/missing.md for details.\n',
@@ -152,7 +152,7 @@ describe('real-world hardening regressions', () => {
   it('does not report a referenced resource directory that exists as missing', () => {
     // Real-world shape: SKILL.md says "helpers live in scripts/lib/" and ships
     // that directory (seen in mvanhorn/last30days-skill).
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-resdir-'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-resdir-'));
     fs.mkdirSync(path.join(dir, 'scripts', 'lib'), { recursive: true });
     fs.writeFileSync(
       path.join(dir, 'SKILL.md'),
@@ -166,7 +166,7 @@ describe('real-world hardening regressions', () => {
   it('does not flag emoji ZWJ sequences as zero-width unicode, but still flags bare ZWJ/ZWSP', () => {
     // Real-world shape: READMEs full of emoji like "\u{1F9D1}‍\u{1F4BB}"
     // (seen in anthropics/claude-plugins-official telegram docs).
-    const emojiDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-zwj-'));
+    const emojiDir = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-zwj-'));
     fs.writeFileSync(
       path.join(emojiDir, 'SKILL.md'),
       '---\nname: zwj\ndescription: a skill whose docs contain emoji joiner sequences\n---\n\n## \u{1F468}‍\u{1F4BB} Maintainers \u{1F937}‍♂️\n',
@@ -174,7 +174,7 @@ describe('real-world hardening regressions', () => {
     expect(ids(scanArtifact(emojiDir).findings).has('injection/zero-width-unicode')).toBe(false);
     rm(emojiDir);
 
-    const hiddenDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-zwsp-'));
+    const hiddenDir = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-zwsp-'));
     fs.writeFileSync(
       path.join(hiddenDir, 'SKILL.md'),
       '---\nname: zwsp\ndescription: a skill hiding characters between letters\n---\n\nno‍tice the hid​den joiners here.\n',
@@ -187,7 +187,7 @@ describe('real-world hardening regressions', () => {
     // Real-world shape: "\u{1F469}\u{1F3FD}‍\u{1F4BB}" — the ZWJ follows a
     // skin-tone modifier (U+1F3FB–FF), which is Emoji_Component rather than
     // Extended_Pictographic, so a naive pictographic check misses it.
-    const toneDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-zwj-tone-'));
+    const toneDir = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-zwj-tone-'));
     fs.writeFileSync(
       path.join(toneDir, 'SKILL.md'),
       '---\nname: zwjtone\ndescription: a skill whose docs contain skin-tone emoji joiner sequences\n---\n\n## \u{1F469}\u{1F3FD}‍\u{1F4BB} Maintainers\n',
@@ -195,7 +195,7 @@ describe('real-world hardening regressions', () => {
     expect(ids(scanArtifact(toneDir).findings).has('injection/zero-width-unicode')).toBe(false);
     rm(toneDir);
 
-    const lettersDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-zwj-letters-'));
+    const lettersDir = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-zwj-letters-'));
     fs.writeFileSync(
       path.join(lettersDir, 'SKILL.md'),
       '---\nname: zwjletters\ndescription: a skill hiding a joiner between ordinary letters\n---\n\nhid‍den instructions here.\n',
@@ -207,7 +207,7 @@ describe('real-world hardening regressions', () => {
   it('does not flag lowercase JS template interpolations as secret env reads', () => {
     // Real-world shape: `${tokens.join(", ")}` in a bundled TS/JS helper
     // (seen in SawyerHood/dev-browser stringUtils.ts).
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-envfp-'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-envfp-'));
     fs.mkdirSync(path.join(dir, 'scripts'), { recursive: true });
     fs.writeFileSync(
       path.join(dir, 'SKILL.md'),

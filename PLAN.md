@@ -1,21 +1,21 @@
-# skillguard — plan
+# casefile — plan
 
-_"skillguard" is a working name, not final._
+
 
 ## Vision
 
 Agents gain capabilities by installing skills and plugins the way apps gain
 capabilities by installing packages. There is no `npm audit` for that supply
-chain. skillguard is that missing tool: **verify and maintain agent
+chain. casefile is that missing tool: **verify and maintain agent
 capabilities.**
 
 Two complementary tools, one lifecycle:
 
 - **SkillOpt optimizes** — makes a capability better (authoring, evals, tuning).
-- **skillguard verifies** — makes a capability trustworthy (audit, gating,
+- **casefile verifies** — makes a capability trustworthy (audit, gating,
   provenance).
 
-skillguard answers "should I trust this skill/plugin, and did it change?" It is
+casefile answers "should I trust this skill/plugin, and did it change?" It is
 deliberately mechanical and reproducible: same bytes in, same report out.
 
 ## Milestones
@@ -48,7 +48,7 @@ writes, secret access) against canary endpoints.
 
 ### M2 — diff / gate / lockfile
 
-`skillguard.lock` pinning approved content hashes; `skillguard diff` between two
+`casefile.lock` pinning approved content hashes; `casefile diff` between two
 versions; a CI gate that fails on new criticals or on any capability the lock
 did not approve. Builds directly on the M0 content hash and report schema.
 

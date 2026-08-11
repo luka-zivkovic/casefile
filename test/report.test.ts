@@ -15,7 +15,7 @@ describe('buildReport', () => {
 
   it('emits a versioned schema', () => {
     expect(report.reportVersion).toBe(1);
-    expect(report.tool.name).toBe('skillguard');
+    expect(report.tool.name).toBe('casefile');
     expect(report.artifact).toEqual(artifact);
     expect(report.summary.filesScanned).toBe(5);
   });

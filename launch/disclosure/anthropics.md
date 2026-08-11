@@ -34,7 +34,7 @@ Everything we publish is framed as a static-analysis signal for human review, no
 anything. Happy to share the full report for your repo ahead of time if useful. Planning to post
 around [DATE]; glad to adjust or hold if you'd like.
 
-— [name], skill-guard
+— [name], casefile
 
 ---
 

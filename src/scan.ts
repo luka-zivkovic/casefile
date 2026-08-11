@@ -30,7 +30,7 @@ export function scanArtifact(inputPath: string): Report {
 
   const config = loadConfig(discovered.root);
   if (config.error) {
-    findings.push(finding('scan/config-invalid', 'info', config.error, 'skillguard.config.json'));
+    findings.push(finding('scan/config-invalid', 'info', config.error, 'casefile.config.json'));
   }
   const active: Finding[] = [];
   const suppressed: Finding[] = [];

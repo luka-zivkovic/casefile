@@ -1,5 +1,5 @@
 /**
- * Minimal CI suppression config. A `skillguard.config.json` in the scanned
+ * Minimal CI suppression config. A `casefile.config.json` in the scanned
  * artifact's root (preferred) or the current working directory may list
  * findings to ignore:
  *
@@ -13,7 +13,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { Finding } from './types.js';
 
-export const CONFIG_FILENAME = 'skillguard.config.json';
+export const CONFIG_FILENAME = 'casefile.config.json';
+/** Pre-rename filename, still honored so existing repos keep their suppressions. */
+export const LEGACY_CONFIG_FILENAME = 'skillguard.config.json';
 
 export interface IgnoreRule {
   ruleId: string;
@@ -21,20 +23,29 @@ export interface IgnoreRule {
   path?: string;
 }
 
-export interface SkillguardConfig {
+export interface CasefileConfig {
   ignore: IgnoreRule[];
   /** Set when a config file exists but could not be parsed. */
   error?: string;
 }
 
-export function loadConfig(artifactRoot: string, cwd: string = process.cwd()): SkillguardConfig {
+export function loadConfig(artifactRoot: string, cwd: string = process.cwd()): CasefileConfig {
   for (const dir of [artifactRoot, cwd]) {
-    const file = path.join(dir, CONFIG_FILENAME);
-    let raw: string;
-    try {
-      raw = fs.readFileSync(file, 'utf-8');
-    } catch {
-      continue; // no config here; try the next location
+    // Within a directory the new filename wins; the legacy name still loads.
+    let file: string | undefined;
+    let raw: string | undefined;
+    for (const name of [CONFIG_FILENAME, LEGACY_CONFIG_FILENAME]) {
+      const candidate = path.join(dir, name);
+      try {
+        raw = fs.readFileSync(candidate, 'utf-8');
+        file = candidate;
+        break;
+      } catch {
+        // not here; try the next name
+      }
+    }
+    if (raw === undefined || file === undefined) {
+      continue; // no config in this dir; try the next location
     }
     try {
       const parsed = JSON.parse(raw) as { ignore?: unknown };
@@ -55,7 +66,7 @@ export function loadConfig(artifactRoot: string, cwd: string = process.cwd()): S
   return { ignore: [] };
 }
 
-export function isIgnored(finding: Finding, config: SkillguardConfig): boolean {
+export function isIgnored(finding: Finding, config: CasefileConfig): boolean {
   return config.ignore.some(
     (rule) => rule.ruleId === finding.ruleId && (rule.path === undefined || finding.file.startsWith(rule.path)),
   );

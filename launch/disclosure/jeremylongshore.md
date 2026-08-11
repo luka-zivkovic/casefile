@@ -32,7 +32,7 @@ its test file — those look like your own sync tooling; just flagging for compl
 Everything we publish is a static-analysis signal for human review, not a judgment. Planning to
 post around [DATE]; happy to share the full report early or adjust timing.
 
-— [name], skill-guard
+— [name], casefile
 
 ---
 

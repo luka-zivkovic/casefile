@@ -1,3 +1,5 @@
+> **Resolved 2026-08-12: the product is named `casefile` — the scan report is an evidence dossier; `casefile scan`/`casefile history` read naturally at a terminal; bare npm name was available.**
+
 # Naming shortlist
 
 "skill-guard" is the working name. It's descriptive but generic, "guard" is overused in security
