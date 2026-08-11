@@ -8,8 +8,7 @@
     "node": ">=20"
   },
   "bin": {
-    "casefile": "dist/cli.js",
-    "skillguard": "dist/cli.js"
+    "casefile": "dist/cli.js"
   },
   "main": "dist/index.js",
   "files": [
