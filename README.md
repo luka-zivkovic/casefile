@@ -1,8 +1,8 @@
-# skillguard
+# casefile
 
-> `npm audit` for agent capabilities. Working name — not final.
+> `npm audit` for agent capabilities.
 
-skillguard statically scans Claude Code **skills**, **plugins**, and
+casefile statically scans Claude Code **skills**, **plugins**, and
 **marketplaces** and produces a reproducible trust/audit report. It never
 executes the code it scans.
 
@@ -26,10 +26,10 @@ node dist/cli.js scan ./plugin --json --out report.json --fail-on warning
 node dist/cli.js history ./plugin
 ```
 
-After `npm link` (or install), the `skillguard` binary is on your PATH:
+After `npm link` (or install), the `casefile` binary is on your PATH:
 
 ```bash
-skillguard scan ./path/to/plugin
+casefile scan ./path/to/plugin
 ```
 
 ### What is an "artifact"?
@@ -80,7 +80,7 @@ Reports are versioned (`reportVersion: 1`):
 ```jsonc
 {
   "reportVersion": 1,
-  "tool": { "name": "skillguard", "version": "0.1.0" },
+  "tool": { "name": "casefile", "version": "0.1.0" },
   "scannedAt": "2026-07-12T22:13:40.276Z",
   "artifact": {
     "type": "plugin",
@@ -88,7 +88,7 @@ Reports are versioned (`reportVersion: 1`):
     "contentHash": "<sha256 over the sorted per-file sha256 hashes>"
   },
   "findings": [ /* sorted critical-first */ ],
-  "suppressed": [ /* findings ignored via skillguard.config.json */ ],
+  "suppressed": [ /* findings ignored via casefile.config.json */ ],
   "summary": { "critical": 8, "warning": 12, "info": 1, "total": 21, "suppressed": 0, "filesScanned": 7 }
 }
 ```
@@ -101,8 +101,8 @@ vendored dirs.
 
 ## Suppressing findings (CI)
 
-To accept a known finding without failing CI, put a `skillguard.config.json`
-in the scanned artifact's root or in the directory you run skillguard from
+To accept a known finding without failing CI, put a `casefile.config.json`
+in the scanned artifact's root or in the directory you run casefile from
 (the artifact's own config wins):
 
 ```json
@@ -135,14 +135,14 @@ in the scanned artifact's root or in the directory you run skillguard from
 ## Options
 
 ```
-skillguard scan <path>
+casefile scan <path>
   --json                 emit the JSON report instead of text
   --out <file>           also write the report to a file
-  --db <path>            sqlite history store (default ~/.skillguard/skillguard.db)
+  --db <path>            sqlite history store (default ~/.casefile/casefile.db)
   --fail-on <level>      critical | warning | none   (default critical)
   --no-store             do not record this scan in history
 
-skillguard history <path>
+casefile history <path>
   --db <path>            sqlite history store
   --json                 emit JSON rows
 ```

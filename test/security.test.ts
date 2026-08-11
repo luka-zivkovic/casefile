@@ -15,11 +15,11 @@ import type { Finding, Report } from '../src/types.js';
 const cleanups: string[] = [];
 
 const SKILL_MD =
-  '---\nname: sec\ndescription: a test skill used for security regression coverage in skillguard\n---\n\nBody.\n';
+  '---\nname: sec\ndescription: a test skill used for security regression coverage in casefile\n---\n\nBody.\n';
 
 /** Create a temp skill dir with SKILL.md plus the given extra files. */
 function makeSkill(files: Record<string, string> = {}, skillMd: string = SKILL_MD): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-sec-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-sec-'));
   cleanups.push(dir);
   fs.writeFileSync(path.join(dir, 'SKILL.md'), skillMd);
   for (const [rel, content] of Object.entries(files)) {
@@ -215,11 +215,11 @@ describe('finding 5: unreadable and oversized files', () => {
   });
 });
 
-describe('finding 7: suppression via skillguard.config.json', () => {
+describe('finding 7: suppression via casefile.config.json', () => {
   it('moves ignored findings to suppressed and out of the summary counts', () => {
     const dir = makeSkill(
       {
-        'skillguard.config.json': JSON.stringify({ ignore: [{ ruleId: 'resources/missing-resource' }] }),
+        'casefile.config.json': JSON.stringify({ ignore: [{ ruleId: 'resources/missing-resource' }] }),
       },
       '---\nname: sec\ndescription: a test skill whose missing resource finding is suppressed here\n---\n\nSee references/missing.md for details.\n',
     );
@@ -238,7 +238,7 @@ describe('finding 7: suppression via skillguard.config.json', () => {
     const files = { 'scripts/net.sh': '#!/bin/sh\ncurl https://example.com\n' };
     const hit = makeSkill({
       ...files,
-      'skillguard.config.json': JSON.stringify({
+      'casefile.config.json': JSON.stringify({
         ignore: [{ ruleId: 'capability/network-call', path: 'scripts/' }],
       }),
     });
@@ -248,7 +248,7 @@ describe('finding 7: suppression via skillguard.config.json', () => {
 
     const miss = makeSkill({
       ...files,
-      'skillguard.config.json': JSON.stringify({
+      'casefile.config.json': JSON.stringify({
         ignore: [{ ruleId: 'capability/network-call', path: 'other/' }],
       }),
     });
@@ -256,16 +256,16 @@ describe('finding 7: suppression via skillguard.config.json', () => {
   });
 
   it('falls back to a config in the cwd and reports an invalid config', () => {
-    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-cwd-'));
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-cwd-'));
     cleanups.push(cwd);
     fs.writeFileSync(
-      path.join(cwd, 'skillguard.config.json'),
+      path.join(cwd, 'casefile.config.json'),
       JSON.stringify({ ignore: [{ ruleId: 'capability/network-call' }] }),
     );
-    const config = loadConfig(fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-noconf-')), cwd);
+    const config = loadConfig(fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-noconf-')), cwd);
     expect(config.ignore).toEqual([{ ruleId: 'capability/network-call' }]);
 
-    const badDir = makeSkill({ 'skillguard.config.json': '{ not json' });
+    const badDir = makeSkill({ 'casefile.config.json': '{ not json' });
     const report = scanArtifact(badDir);
     expect(ids(report.findings).has('scan/config-invalid')).toBe(true);
   });

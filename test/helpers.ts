@@ -11,7 +11,7 @@ export function fixture(name: string): string {
 
 /** Copy a fixture into a fresh temp dir so tests can add symlinks etc. */
 export function stageFixture(name: string): string {
-  const dest = fs.mkdtempSync(path.join(os.tmpdir(), 'skillguard-'));
+  const dest = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-'));
   fs.cpSync(fixture(name), dest, { recursive: true });
   return dest;
 }

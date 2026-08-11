@@ -5,7 +5,17 @@ import * as path from 'node:path';
 import type { Report } from './types.js';
 
 export function defaultDbPath(): string {
-  return path.join(os.homedir(), '.skillguard', 'skillguard.db');
+  const dir = path.join(os.homedir(), '.casefile');
+  const file = path.join(dir, 'casefile.db');
+  // One-time migration from the pre-rename location so scan history survives.
+  if (!fs.existsSync(file)) {
+    const legacy = path.join(os.homedir(), '.skillguard', 'skillguard.db');
+    if (fs.existsSync(legacy)) {
+      fs.mkdirSync(dir, { recursive: true });
+      fs.copyFileSync(legacy, file);
+    }
+  }
+  return file;
 }
 
 export interface HistoryRow {

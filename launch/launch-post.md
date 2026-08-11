@@ -1,6 +1,6 @@
 # We scanned 16 popular Claude Code plugin collections. Here's what installing them actually pulls in.
 
-_Draft. Replace "skill-guard" with the final product name before publishing._
+_Draft. Replace "casefile" with the final product name before publishing._
 
 Claude Code plugins and skills are `git clone` plus a bit of trust. You add a marketplace, install
 a plugin, and from then on it can register hooks that run on every session, ship scripts that make
@@ -55,7 +55,7 @@ deal for a tool like this: you get the heads-up before the internet does.
 ## Try it on your own plugins
 
 ```
-npx skill-guard scan ./path-to-a-plugin
+npx casefile scan ./path-to-a-plugin
 ```
 
 It runs locally, reads only what's on disk, needs no credentials, and prints a report with exit

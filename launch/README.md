@@ -1,7 +1,7 @@
 # Launch kit
 
-Materials for skill-guard's first public moment: a scan of 16 popular Claude Code
-plugin/skill collections, published alongside `skillguard scan` as the call to action.
+Materials for casefile's first public moment: a scan of 16 popular Claude Code
+plugin/skill collections, published alongside `casefile scan` as the call to action.
 
 These are **drafts for Luka to review, edit, and send** — nothing here has been sent or
 published.
@@ -11,7 +11,7 @@ published.
 - `disclosure/` — heads-up notes to the maintainers of the three repos we name with
   notable findings. Send these **before** publishing anything public.
 - `launch-post.md` — the public write-up, built from `reports/2026-07-13/SUMMARY.md`.
-- `naming-shortlist.md` — candidate real names to replace the "skill-guard" working name.
+- `naming-shortlist.md` — the naming exploration that led to "casefile" (resolved).
 
 ## Suggested order (why disclosure comes first)
 

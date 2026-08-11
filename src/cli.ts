@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * skillguard CLI.
+ * casefile CLI.
  *
  * Exit codes:
  *   0 — scan completed, no findings at or above the --fail-on threshold
@@ -26,7 +26,7 @@ function shouldFail(report: Report, failOn: FailOn): boolean {
 
 const program = new Command();
 program
-  .name('skillguard')
+  .name('casefile')
   .description('npm audit for agent capabilities — static scanner for Claude Code skills and plugins')
   .version(TOOL_VERSION);
 
@@ -49,7 +49,7 @@ program
       report = scanArtifact(inputPath);
     } catch (err) {
       const message = err instanceof DiscoveryError ? err.message : `scan failed: ${(err as Error).message}`;
-      console.error(`skillguard: ${message}`);
+      console.error(`casefile: ${message}`);
       process.exitCode = 2;
       return;
     }
@@ -61,7 +61,7 @@ program
         store.close();
       } catch (err) {
         // History persistence is best-effort; the scan result stands on its own.
-        console.error(`skillguard: warning: could not record scan history: ${(err as Error).message}`);
+        console.error(`casefile: warning: could not record scan history: ${(err as Error).message}`);
       }
     }
 
@@ -86,7 +86,7 @@ program
       rows = store.history(inputPath);
       store.close();
     } catch (err) {
-      console.error(`skillguard: ${(err as Error).message}`);
+      console.error(`casefile: ${(err as Error).message}`);
       process.exitCode = 2;
       return;
     }
