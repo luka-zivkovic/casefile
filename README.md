@@ -51,6 +51,7 @@ Every check emits findings of the form
 |---|---|---|
 | **Structural** | `structural/*` | SKILL.md presence, frontmatter parse, name/description constraints, plugin.json validity, version presence, missing forked agents, routing metadata |
 | **Resource integrity** | `resources/*` | Referenced `references/ templates/ scripts/ assets/` files that don't exist; progressive-disclosure body-size limits |
+| **Quality heuristics** | `quality/*` | Oversized SKILL.md body without a `references/` escape hatch (progressive disclosure); no failure-modes/guardrails guidance; bundled resources never referenced from SKILL.md; trigger-only routing descriptions with no anti-trigger. Ported from skill-mastery's `audit_skills.py`, recalibrated so a typical well-made skill yields **zero** quality findings (one `warning` rule, the rest `info`) |
 | **Capability audit** | `capability/*` | Declared `allowed-tools`; hooks that run shell commands; scripts that make network calls, `curl \| sh`, read secret env vars (API_KEY/TOKEN/SECRET), write outside the artifact, `rm -rf`, or eval/exec downloaded content |
 | **Supply-chain hygiene** | `supplychain/*` | Symlinks resolving outside the artifact; large base64/encoded blobs; unauditable binary files |
 | **Injection heuristics** | `injection/*` | "ignore previous instructions", "do not tell the user", model-addressed hidden instructions in reference files, imperatives in HTML comments, zero-width / bidi / invisible-tag unicode |
@@ -62,7 +63,7 @@ Everything under the artifact root **except `.git`** is content-scanned and
 hashed — including vendored/generated dirs like `node_modules`, `dist`,
 `build`, `venv`: those are exactly where a payload would hide. The capability,
 supply-chain, and injection rules apply there at full severity. Only skill
-*discovery* (and therefore the structural/resource quality rules) prunes
+*discovery* (and therefore the structural/resource/quality rules) prunes
 vendored dirs, so third-party code does not generate style noise.
 
 Untrusted content quoted in finding messages is sanitized (newlines/tabs
