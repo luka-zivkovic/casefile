@@ -7,11 +7,12 @@ import { walkFiles } from './walk.js';
 import { capabilityCheck } from './checks/capability.js';
 import { finding, type CheckContext } from './checks/context.js';
 import { injectionCheck } from './checks/injection.js';
+import { qualityCheck } from './checks/quality.js';
 import { resourceCheck } from './checks/resources.js';
 import { structuralCheck } from './checks/structural.js';
 import { supplyChainCheck } from './checks/supplychain.js';
 
-const CHECKS = [structuralCheck, resourceCheck, capabilityCheck, supplyChainCheck, injectionCheck];
+const CHECKS = [structuralCheck, resourceCheck, qualityCheck, capabilityCheck, supplyChainCheck, injectionCheck];
 
 /**
  * Statically scan a skill dir, plugin dir, or marketplace root.
