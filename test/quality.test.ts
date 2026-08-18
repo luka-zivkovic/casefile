@@ -170,6 +170,30 @@ describe('quality/orphaned-resource', () => {
     rm(dir);
   });
 
+  it('counts a top-level resource directory mention as referencing its contents', () => {
+    const dir = mkSkill({
+      'SKILL.md':
+        frontmatter() +
+        '# Dir\n\n## Guardrails\n\nDo not guess.\n\nLoad the appropriate file from references/.\n',
+      'references/one.md': 'one\n',
+      'references/two.md': 'two\n',
+    });
+    expect(ids(scanArtifact(dir).findings).has('quality/orphaned-resource')).toBe(false);
+    rm(dir);
+  });
+
+  it('counts a parameterized resource path as referencing its directory', () => {
+    const dir = mkSkill({
+      'SKILL.md':
+        frontmatter() +
+        '# Dynamic\n\n## Guardrails\n\nDo not guess.\n\nLoad `references/<topic>.md` for the requested topic.\n',
+      'references/one.md': 'one\n',
+      'references/two.md': 'two\n',
+    });
+    expect(ids(scanArtifact(dir).findings).has('quality/orphaned-resource')).toBe(false);
+    rm(dir);
+  });
+
   it('counts a bare-filename mention as a reference', () => {
     const dir = mkSkill({
       'SKILL.md':
@@ -212,6 +236,47 @@ describe('quality/missing-anti-trigger', () => {
     rm(dir);
   });
 
+  it("recognizes the common 'use this skill when' trigger form", () => {
+    const dir = mkSkill({
+      'SKILL.md':
+        '---\nname: quality-fixture\ndescription: >-\n' +
+        '  Format changelog entries from git history. Use this skill when the user\n' +
+        '  asks for release notes or a changelog summary of recent commits.\n---\n\n' +
+        '# Trigger\n\n## Guardrails\n\nDo not guess.\n',
+    });
+    const report = scanArtifact(dir);
+    expect(ids(report.findings).has('quality/missing-anti-trigger')).toBe(true);
+    expect(report.findings.filter((f) => f.ruleId.includes('routing-no-anti-trigger'))).toEqual([]);
+    rm(dir);
+  });
+
+  it("accepts 'out of scope' as negative routing guidance", () => {
+    const dir = mkSkill({
+      'SKILL.md':
+        '---\nname: quality-fixture\ndescription: >-\n' +
+        '  Format changelog entries from git history. Use when the user asks for\n' +
+        '  release notes. Destructive repository changes are out of scope.\n---\n\n' +
+        '# Paired\n\n## Guardrails\n\nDo not guess.\n',
+    });
+    expect(ids(scanArtifact(dir).findings).has('quality/missing-anti-trigger')).toBe(false);
+    rm(dir);
+  });
+
+  it('does not duplicate the anti-trigger advisory under structural rules', () => {
+    const dir = mkSkill({
+      'SKILL.md':
+        '---\nname: quality-fixture\ndescription: >-\n' +
+        '  Format changelog entries from git history. Use when the user asks for\n' +
+        '  release notes or a changelog summary of recent commits.\n---\n\n' +
+        '# Trigger\n\n## Guardrails\n\nDo not guess.\n',
+    });
+    const antiTriggerFindings = scanArtifact(dir).findings.filter(
+      (f) => f.ruleId === 'quality/missing-anti-trigger' || f.ruleId === 'structural/routing-no-anti-trigger',
+    );
+    expect(antiTriggerFindings.map((f) => f.ruleId)).toEqual(['quality/missing-anti-trigger']);
+    rm(dir);
+  });
+
   it('stays silent when the description states no trigger at all', () => {
     const dir = mkSkill({
       'SKILL.md':
@@ -220,7 +285,9 @@ describe('quality/missing-anti-trigger', () => {
         '  suitable to paste into published release documents.\n---\n\n' +
         '# NoTrigger\n\n## Guardrails\n\nDo not guess.\n',
     });
-    expect(ids(scanArtifact(dir).findings).has('quality/missing-anti-trigger')).toBe(false);
+    const findings = scanArtifact(dir).findings;
+    expect(ids(findings).has('quality/missing-anti-trigger')).toBe(false);
+    expect(findings.some((f) => f.ruleId === 'structural/routing-no-anti-trigger')).toBe(true);
     rm(dir);
   });
 });

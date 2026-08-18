@@ -10,6 +10,7 @@ import * as path from 'node:path';
 import { parseFrontmatter } from '../frontmatter.js';
 import type { Finding } from '../types.js';
 import { finding, relTo, type CheckContext } from './context.js';
+import { hasAntiTrigger, hasPositiveRoutingTrigger } from './routing.js';
 
 /** Body budget (est. tokens, chars/4) when the skill ships no references/. */
 const BODY_TOKEN_LIMIT = 1500;
@@ -31,13 +32,8 @@ const FAILURE_HEADING_CUES = [
 /** Inline guidance that serves the same purpose without a dedicated heading. */
 const DO_NOT_GUIDANCE_RE = /\b(do not|don't|never)\b/i;
 
-/** Positive routing trigger in a frontmatter description. */
-const TRIGGER_RE = /\buse (?:it |this )?(?:when|for)\b/i;
-/** Negative routing guidance in a frontmatter description. */
-const ANTI_TRIGGER_RE = /\b(?:do not use|don't use|never use|not for|not to be used)\b/i;
-
 /** Same resource-path shape the resources check matches. */
-const RESOURCE_MENTION_RE = /(?<![\w/])((?:references|templates|scripts|assets)\/[A-Za-z0-9._/-]+)/g;
+const RESOURCE_MENTION_RE = /(?<![\w/])((?:references|templates|scripts|assets)\/[A-Za-z0-9._/-]*)/g;
 /** Resource dirs policed for orphans (scripts are often invoked indirectly). */
 const ORPHAN_DIRS = ['references', 'templates', 'assets'];
 
@@ -154,7 +150,7 @@ function checkSkill(ctx: CheckContext, skillDir: string): Finding[] {
 
   // quality/missing-anti-trigger — only when a positive trigger exists; a
   // description with no trigger at all is the structural check's business.
-  if (desc && TRIGGER_RE.test(desc) && !ANTI_TRIGGER_RE.test(desc)) {
+  if (desc && hasPositiveRoutingTrigger(desc) && !hasAntiTrigger(desc)) {
     findings.push(
       finding(
         'quality/missing-anti-trigger',
