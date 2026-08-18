@@ -8,6 +8,7 @@ import * as path from 'node:path';
 import { FrontmatterError, NAME_RE, parseFrontmatter } from '../frontmatter.js';
 import type { Finding } from '../types.js';
 import { finding, relTo, type CheckContext } from './context.js';
+import { hasAntiTrigger, hasPositiveRoutingTrigger } from './routing.js';
 
 const MAX_BODY_LINES = 500;
 const MAX_CHARS = 30_000;
@@ -126,15 +127,16 @@ function checkSkill(ctx: CheckContext, skillDir: string, plugin?: string): Findi
 
   // Routing metadata (from audit_skills.py) — advisory quality hints.
   if (desc) {
-    if (!/\b(use when|when |before |after |for )\b/i.test(desc)) {
+    const hasTrigger = hasPositiveRoutingTrigger(desc);
+    if (!hasTrigger) {
       findings.push(
         finding('structural/routing-no-trigger', 'info', 'routing description lacks a concrete positive trigger', relSkill),
       );
-    }
-    if (!/\b(do not|don't|never|stay silent|out of scope)\b/i.test(desc)) {
-      findings.push(
-        finding('structural/routing-no-anti-trigger', 'info', 'routing description lacks an explicit anti-trigger', relSkill),
-      );
+      if (!hasAntiTrigger(desc)) {
+        findings.push(
+          finding('structural/routing-no-anti-trigger', 'info', 'routing description lacks an explicit anti-trigger', relSkill),
+        );
+      }
     }
   }
 
