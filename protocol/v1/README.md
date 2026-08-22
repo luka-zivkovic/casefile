@@ -76,11 +76,14 @@ must not turn non-completion into an apparently good negative result:
 | positive | unsupported / incomplete / error / harness timeout | miss |
 | negative | completed + clean | correctly cleared negative |
 | negative | completed + flag | false positive |
-| negative | unsupported / incomplete / error / harness timeout | coverage failure; not a true negative and cannot improve specificity |
+| negative | unsupported / incomplete / error / harness timeout | coverage failure; excluded from conditional specificity/FPR but retained in the negative-clearance denominator |
 
-Consequently, common-track specificity/negative-clearance uses **all** negative
-cases as its denominator. A zero-denominator metric is undefined, never 1. An
-all-unsupported adapter therefore has zero common coverage, zero positive
+Common-track specificity and false-positive rate are conditional on completed
+negative classifications: specificity is `TN / (TN + FP)` and false-positive
+rate is `FP / (TN + FP)`. Negative clearance is a separate coverage-sensitive
+metric, `TN / all negative cases`, so negative non-completion cannot improve it.
+A zero-denominator metric is undefined, never 1. An all-unsupported adapter has
+undefined conditional specificity/FPR, zero common coverage, zero positive
 recall, and zero negative clearance. An all-positive adapter has false-positive
 rate 1 on completed negative cases. Qualification output may assert only schema,
 transport, isolation, and expected-fixture conformance; it may not emit recall,
