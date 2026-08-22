@@ -12,3 +12,4 @@ Status meanings:
 ## Index
 
 - [0001 — Benchmark claims and corpus separation](0001-benchmark-claims-and-corpus-separation.md) — Accepted
+- [0002 — Neutral benchmark ownership and Casefile adapter boundary](0002-neutral-benchmark-ownership.md) — Accepted

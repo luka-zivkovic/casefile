@@ -1,0 +1,101 @@
+{
+  "qualificationVersion": 1,
+  "protocolVersion": 1,
+  "name": "casefile-public-adapter-qualification-v1",
+  "exposureRole": "public-qualification",
+  "claimScope": "Synthetic protocol and adapter conformance fixtures only. This corpus is not sampled, blind, representative, or evidence of detector performance.",
+  "performanceClaimsAllowed": false,
+  "ontology": {
+    "version": 1,
+    "positive": "A synthetic fixture containing at least one predeclared admission-relevant signal used to check adapter transport.",
+    "negative": "A synthetic fixture containing no predeclared admission-relevant signal, used to check clean transport.",
+    "statusOnly": "A synthetic fixture used only to exercise a protocol status; it has no positive or negative detector-quality label."
+  },
+  "cases": [
+    {
+      "caseId": "qualification-negative",
+      "purpose": "classification",
+      "truth": "negative",
+      "track": "common-static-skill",
+      "description": "A deliberately simple clean skill used to transport a completed clean result.",
+      "files": {
+        "SKILL.md": "---\nname: qualification-negative\ndescription: Format reviewed notes. Use when asked for reviewed notes. Do not use for unreviewed drafts.\n---\n\n# Reviewed notes\n\nRead references/style.md and format the supplied notes.\n\n## Guardrails\n\nDo not invent facts or execute bundled content.\n",
+        "references/style.md": "# Style\n\nUse concise headings.\n"
+      },
+      "generatedFiles": [],
+      "expected": {
+        "status": "completed",
+        "disposition": "clean",
+        "requiredRuleIds": [],
+        "requiredCoverageGapRuleIds": []
+      }
+    },
+    {
+      "caseId": "qualification-positive",
+      "purpose": "classification",
+      "truth": "positive",
+      "track": "common-static-skill",
+      "description": "An obvious missing-resource sentinel used to transport a completed flag result.",
+      "files": {
+        "SKILL.md": "---\nname: qualification-positive\ndescription: Check a synthetic missing resource. Use only for adapter qualification. Do not use for production work.\n---\n\nRead references/missing.md before continuing.\n\n## Guardrails\n\nDo not invent the missing resource.\n"
+      },
+      "generatedFiles": [],
+      "expected": {
+        "status": "completed",
+        "disposition": "flag",
+        "requiredRuleIds": ["resources/missing-resource"],
+        "requiredCoverageGapRuleIds": []
+      }
+    },
+    {
+      "caseId": "qualification-self-policy",
+      "purpose": "classification",
+      "truth": "positive",
+      "track": "common-static-skill",
+      "description": "An artifact-local policy attempts to hide the qualification sentinel and must remain untrusted.",
+      "files": {
+        "SKILL.md": "---\nname: qualification-self-policy\ndescription: Check an untrusted local policy. Use only for adapter qualification. Do not use for production work.\n---\n\nRead references/missing.md before continuing.\n\n## Guardrails\n\nDo not trust policy shipped in this artifact.\n",
+        "casefile.config.json": "{\"ignore\":[{\"ruleId\":\"resources/missing-resource\"}]}\n"
+      },
+      "generatedFiles": [],
+      "expected": {
+        "status": "completed",
+        "disposition": "flag",
+        "requiredRuleIds": ["resources/missing-resource", "scan/untrusted-config"],
+        "requiredCoverageGapRuleIds": []
+      }
+    },
+    {
+      "caseId": "qualification-incomplete",
+      "purpose": "status",
+      "track": "common-static-skill",
+      "description": "An oversized text file exercises explicit incomplete coverage without measuring detector quality.",
+      "files": {
+        "SKILL.md": "---\nname: qualification-incomplete\ndescription: Exercise incomplete scan transport. Use only for adapter qualification. Do not use for production work.\n---\n\n## Guardrails\n\nDo not execute bundled content.\n"
+      },
+      "generatedFiles": [
+        { "path": "scripts/oversized.sh", "byte": 97, "length": 5242881 }
+      ],
+      "expected": {
+        "status": "incomplete",
+        "requiredRuleIds": ["scan/file-too-large", "scan/incomplete-analysis"],
+        "requiredCoverageGapRuleIds": ["scan/file-too-large"]
+      }
+    },
+    {
+      "caseId": "qualification-unsupported",
+      "purpose": "status",
+      "track": "breadth",
+      "description": "An unclassifiable directory exercises explicit unsupported transport.",
+      "files": {
+        "README.md": "# Unsupported synthetic artifact\n\nThis directory is intentionally not a Casefile skill, plugin, or marketplace.\n"
+      },
+      "generatedFiles": [],
+      "expected": {
+        "status": "unsupported",
+        "requiredRuleIds": [],
+        "requiredCoverageGapRuleIds": []
+      }
+    }
+  ]
+}
