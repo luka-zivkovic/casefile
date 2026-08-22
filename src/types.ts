@@ -15,7 +15,7 @@ export interface Artifact {
   type: ArtifactType;
   /** Absolute path of the artifact root. */
   path: string;
-  /** sha256 over the sorted per-file sha256 hashes. */
+  /** sha256 over canonical typed path/digest tuples for every artifact entry. */
   contentHash: string;
 }
 
@@ -24,21 +24,39 @@ export interface ReportSummary {
   warning: number;
   info: number;
   total: number;
-  /** Findings suppressed via casefile.config.json (not counted above). */
+  /** Findings suppressed via trusted operator policy (not counted above). */
   suppressed: number;
   filesScanned: number;
 }
 
+export interface ReportPolicy {
+  /** No suppressions, explicit operator policy, or explicit legacy opt-in. */
+  source: 'none' | 'explicit' | 'artifact-legacy';
+  /** Fail closed when any content analysis is incomplete. */
+  strict: boolean;
+  /** SHA-256 of the exact trusted policy bytes, when policy was loaded. */
+  contentHash?: string;
+}
+
+export interface ReportIdentity {
+  algorithm: 'sha256';
+  /** Digest of canonical report content, excluding time and absolute paths. */
+  digest: string;
+}
+
 export interface Report {
-  reportVersion: 1;
+  reportVersion: 2;
   tool: { name: string; version: string };
   scannedAt: string;
   artifact: Artifact;
+  policy: ReportPolicy;
   findings: Finding[];
-  /** Findings matched by a casefile.config.json ignore rule: still listed,
+  /** Findings matched by a trusted suppression-policy rule: still listed,
    * but excluded from the summary counts and exit-code evaluation. */
   suppressed: Finding[];
   summary: ReportSummary;
+  /** Stable identity suitable for future locking/signing. */
+  identity: ReportIdentity;
 }
 
 /** A skill directory discovered inside an artifact. */

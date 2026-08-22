@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildReport, renderMarkdown } from '../src/report.js';
+import { buildReport, canonicalReportContent, renderMarkdown } from '../src/report.js';
 import type { Artifact, Finding } from '../src/types.js';
 
 const artifact: Artifact = { type: 'skill', path: '/tmp/x', contentHash: 'abc123' };
@@ -14,9 +14,11 @@ describe('buildReport', () => {
   const report = buildReport(artifact, findings, 5);
 
   it('emits a versioned schema', () => {
-    expect(report.reportVersion).toBe(1);
+    expect(report.reportVersion).toBe(2);
     expect(report.tool.name).toBe('casefile');
     expect(report.artifact).toEqual(artifact);
+    expect(report.policy).toEqual({ source: 'none', strict: false });
+    expect(report.identity).toEqual({ algorithm: 'sha256', digest: expect.stringMatching(/^[a-f0-9]{64}$/) });
     expect(report.summary.filesScanned).toBe(5);
   });
 
@@ -33,6 +35,13 @@ describe('buildReport', () => {
     const parsed = JSON.parse(JSON.stringify(report));
     expect(parsed.findings).toHaveLength(3);
     expect(parsed.scannedAt).toMatch(/\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it('uses canonical identity that excludes wall clock and absolute artifact path', () => {
+    const first = buildReport(artifact, findings, 5);
+    const relocated = buildReport({ ...artifact, path: '/another/absolute/root' }, findings, 5);
+    expect(canonicalReportContent(first)).toBe(canonicalReportContent(relocated));
+    expect(first.identity).toEqual(relocated.identity);
   });
 });
 

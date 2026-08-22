@@ -76,8 +76,12 @@ export function injectionCheck(ctx: CheckContext): Finding[] {
     // 1. Known injection phrases.
     const phraseSeen = new Set<string>();
     for (let i = 0; i < lines.length; i++) {
+      // Whitespace-only mutations should not bypass phrase matching. This is
+      // deliberately not a general deobfuscator: the benchmark reports the
+      // exact authored mutation families the scanner currently retains.
+      const normalizedLine = lines[i].replace(/\s+/g, ' ');
       for (const re of INJECTION_PHRASES) {
-        const m = re.exec(lines[i]);
+        const m = re.exec(normalizedLine);
         if (m && !phraseSeen.has(re.source)) {
           phraseSeen.add(re.source);
           findings.push(
