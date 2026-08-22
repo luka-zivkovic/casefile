@@ -86,8 +86,10 @@ A zero-denominator metric is undefined, never 1. An all-unsupported adapter has
 undefined conditional specificity/FPR, zero common coverage, zero positive
 recall, and zero negative clearance. An all-positive adapter has false-positive
 rate 1 on completed negative cases. Qualification output may assert only schema,
-transport, isolation, and expected-fixture conformance; it may not emit recall,
-precision, ranking, superiority, or any other performance claim.
+transport, Casefile's no-execution adapter behavior, declared operating
+conditions, and expected-fixture conformance. It must report external sandbox
+or network enforcement separately and may not emit recall, precision, ranking,
+superiority, or any other performance claim.
 
 ## Canonical evidence and raw retention boundary
 
