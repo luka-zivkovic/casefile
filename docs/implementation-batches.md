@@ -181,6 +181,11 @@ masquerading legacy evidence cannot become v4; and output remains deterministic.
 
 ## Batch 1C — neutral Casefile benchmark protocol
 
+Ownership/isolation is resolved by accepted Casefile ADR-0002: the separately
+owned `agent-artifact-trust-bench` repository owns the harness, comparator
+execution, and raw results. Casefile owns only its public protocol, adapter, and
+synthetic qualification corpus. Gate 5 remains open for the blind-run design.
+
 The comparator harness lives in a separately owned benchmark workspace or
 repository, not inside Casefile's product runtime or CI. Casefile ships only
 its adapter, public protocol, and synthetic qualification corpus. Build no
@@ -444,8 +449,9 @@ historical semantics and must be accepted before their runtime batch:
    The evaluator-version regression gate remains in Coeval (Coeval ADR-0006).
 7. Collection and independent-review plan for the first genuinely sealed
    validation revision.
-8. Ownership and isolation of the neutral benchmark workspace so comparator
-   execution never becomes Casefile product behavior.
+8. **Resolved for Batch 1C:** ownership and isolation of the neutral benchmark
+   workspace is fixed by Casefile ADR-0002; comparator execution never becomes
+   Casefile product behavior.
 9. Exact dataset-role compatibility matrix. Sealed validation must be disjoint
    from exposed roles; analysis/authoring, iterative-development, and
    regression/golden overlap rules must be named rather than inferred.

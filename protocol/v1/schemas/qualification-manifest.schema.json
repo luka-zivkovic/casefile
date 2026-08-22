@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:casefile:trust-benchmark:qualification-manifest:v1",
+  "title": "Casefile public adapter qualification corpus v1",
+  "$defs": {
+    "safePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!\\.$)(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?!.*[\\u0000-\\u001f\\u007f]).+$"
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "requiredRuleIds", "requiredCoverageGapRuleIds"],
+      "properties": {
+        "status": { "enum": ["completed", "unsupported", "incomplete", "error"] },
+        "disposition": { "enum": ["flag", "clean"] },
+        "requiredRuleIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "requiredCoverageGapRuleIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "completed" } }, "required": ["status"] },
+          "then": { "required": ["disposition"] },
+          "else": { "not": { "required": ["disposition"] } }
+        }
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "qualificationVersion",
+    "protocolVersion",
+    "name",
+    "exposureRole",
+    "claimScope",
+    "performanceClaimsAllowed",
+    "ontology",
+    "cases"
+  ],
+  "properties": {
+    "qualificationVersion": { "const": 1 },
+    "protocolVersion": { "const": 1 },
+    "name": { "const": "casefile-public-adapter-qualification-v1" },
+    "exposureRole": { "const": "public-qualification" },
+    "claimScope": { "type": "string", "minLength": 1 },
+    "performanceClaimsAllowed": { "const": false },
+    "ontology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "positive", "negative", "statusOnly"],
+      "properties": {
+        "version": { "const": 1 },
+        "positive": { "type": "string", "minLength": 1 },
+        "negative": { "type": "string", "minLength": 1 },
+        "statusOnly": { "type": "string", "minLength": 1 }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["caseId", "purpose", "track", "description", "files", "generatedFiles", "expected"],
+        "properties": {
+          "caseId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,127}$" },
+          "purpose": { "enum": ["classification", "status"] },
+          "truth": { "enum": ["positive", "negative"] },
+          "track": { "enum": ["common-static-skill", "breadth"] },
+          "description": { "type": "string", "minLength": 1 },
+          "files": {
+            "type": "object",
+            "propertyNames": { "$ref": "#/$defs/safePath" },
+            "additionalProperties": { "type": "string" }
+          },
+          "generatedFiles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "byte", "length"],
+              "properties": {
+                "path": { "$ref": "#/$defs/safePath" },
+                "byte": { "type": "integer", "minimum": 1, "maximum": 255 },
+                "length": { "type": "integer", "minimum": 1, "maximum": 6291456 }
+              }
+            }
+          },
+          "expected": { "$ref": "#/$defs/expected" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "purpose": { "const": "classification" } }, "required": ["purpose"] },
+            "then": {
+              "required": ["truth"],
+              "properties": {
+                "expected": {
+                  "properties": { "status": { "const": "completed" } }
+                }
+              }
+            },
+            "else": { "not": { "required": ["truth"] } }
+          },
+          {
+            "if": { "properties": { "truth": { "const": "positive" } }, "required": ["truth"] },
+            "then": {
+              "properties": {
+                "expected": {
+                  "properties": { "disposition": { "const": "flag" } }
+                }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "truth": { "const": "negative" } }, "required": ["truth"] },
+            "then": {
+              "properties": {
+                "expected": {
+                  "properties": { "disposition": { "const": "clean" } }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "cases": {
+          "contains": {
+            "type": "object",
+            "required": ["purpose", "truth"],
+            "properties": {
+              "purpose": { "const": "classification" },
+              "truth": { "const": "positive" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "cases": {
+          "contains": {
+            "type": "object",
+            "required": ["purpose", "truth"],
+            "properties": {
+              "purpose": { "const": "classification" },
+              "truth": { "const": "negative" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "cases": {
+          "contains": {
+            "type": "object",
+            "required": ["expected"],
+            "properties": {
+              "expected": {
+                "type": "object",
+                "required": ["status"],
+                "properties": { "status": { "const": "incomplete" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "cases": {
+          "contains": {
+            "type": "object",
+            "required": ["expected"],
+            "properties": {
+              "expected": {
+                "type": "object",
+                "required": ["status"],
+                "properties": { "status": { "const": "unsupported" } }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
