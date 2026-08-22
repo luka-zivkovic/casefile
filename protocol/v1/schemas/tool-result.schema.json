@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:casefile:trust-benchmark:tool-result:v1",
+  "title": "Casefile trust-benchmark tool result v1",
+  "$defs": {
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "digest"],
+      "properties": {
+        "algorithm": { "const": "sha256" },
+        "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?:\\.|(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))(?!.*\\/\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f]+(?:/[^/\\\\\\u0000-\\u001f\\u007f]+)*)$"
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ruleId", "severity", "message", "path", "disposition"],
+      "properties": {
+        "ruleId": { "type": "string", "minLength": 1 },
+        "severity": { "enum": ["critical", "warning", "info"] },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "$ref": "#/$defs/relativePath" },
+        "line": { "type": "integer", "minimum": 1 },
+        "disposition": { "enum": ["active", "suppressed"] }
+      }
+    },
+    "coverageGap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ruleId", "message", "path"],
+      "properties": {
+        "ruleId": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "$ref": "#/$defs/relativePath" },
+        "line": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "contentIdentity"],
+      "properties": {
+        "type": { "enum": ["skill", "plugin", "marketplace"] },
+        "contentIdentity": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "identity"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "identity": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "statusReason": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,127}$" },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocolVersion",
+    "resultType",
+    "caseId",
+    "track",
+    "runIndex",
+    "environmentId",
+    "adapter",
+    "tool",
+    "status",
+    "findings",
+    "coverageGaps",
+    "resultIdentity"
+  ],
+  "properties": {
+    "protocolVersion": { "const": 1 },
+    "resultType": { "const": "tool-result" },
+    "caseId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$" },
+    "track": { "enum": ["common-static-skill", "breadth"] },
+    "runIndex": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+    "environmentId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._:@/+\\-]{0,255}$" },
+    "adapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "const": "casefile" },
+        "version": { "const": 1 }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "identityDigest"],
+      "properties": {
+        "name": { "const": "casefile" },
+        "version": { "type": "string", "minLength": 1 },
+        "identityDigest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "status": { "enum": ["completed", "unsupported", "incomplete", "error"] },
+    "disposition": { "enum": ["flag", "clean"] },
+    "artifact": { "$ref": "#/$defs/artifact" },
+    "report": { "$ref": "#/$defs/report" },
+    "statusReason": { "$ref": "#/$defs/statusReason" },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "coverageGaps": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/coverageGap" }
+    },
+    "resultIdentity": { "$ref": "#/$defs/digest" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "completed" } }, "required": ["status"] },
+      "then": {
+        "required": ["disposition", "artifact", "report"],
+        "not": { "required": ["statusReason"] },
+        "properties": { "coverageGaps": { "maxItems": 0 } }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "incomplete" } }, "required": ["status"] },
+      "then": {
+        "required": ["artifact", "report", "statusReason"],
+        "not": { "required": ["disposition"] },
+        "properties": { "coverageGaps": { "minItems": 1 } }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "enum": ["unsupported", "error"] } }, "required": ["status"] },
+      "then": {
+        "required": ["statusReason"],
+        "not": {
+          "anyOf": [
+            { "required": ["disposition"] },
+            { "required": ["artifact"] },
+            { "required": ["report"] }
+          ]
+        },
+        "properties": {
+          "findings": { "maxItems": 0 },
+          "coverageGaps": { "maxItems": 0 }
+        }
+      }
+    }
+  ]
+}

@@ -8,12 +8,14 @@
     "node": ">=20"
   },
   "bin": {
-    "casefile": "dist/cli.js"
+    "casefile": "dist/cli.js",
+    "casefile-benchmark-adapter": "dist/trust-benchmark-adapter-cli.js"
   },
   "main": "dist/index.js",
   "files": [
     "dist",
-    "benchmark"
+    "benchmark",
+    "protocol"
   ],
   "scripts": {
     "build": "tsc",
@@ -29,6 +31,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.17.30",
+    "ajv": "^8.20.0",
     "typescript": "^5.8.3",
     "vitest": "^3.1.4"
   },

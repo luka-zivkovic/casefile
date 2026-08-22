@@ -1,0 +1,23 @@
+{
+  "protocolVersion": 1,
+  "digestAlgorithm": "sha256",
+  "canonicalResult": "casefile-tool-result-json/v1",
+  "files": [
+    {
+      "path": "qualification/manifest.json",
+      "sha256": "86dc3526b19726aa53f75d481bda425d2d5314dd5ec601105c6b76f98ba8dba8"
+    },
+    {
+      "path": "schemas/adapter-request.schema.json",
+      "sha256": "733c6690f13760f3d3da0353fcdd9af388ff1d770a9b84929d99b8fce8936cf6"
+    },
+    {
+      "path": "schemas/qualification-manifest.schema.json",
+      "sha256": "3158a6b57389f4dc5e2b013c55d0be03185a649a108e58cfee8696cd32cab88a"
+    },
+    {
+      "path": "schemas/tool-result.schema.json",
+      "sha256": "ccb71fc49b513fecfbc1053d4dbefa15dd3f557fdb729122fe926eff7842db7b"
+    }
+  ]
+}
