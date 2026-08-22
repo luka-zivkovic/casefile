@@ -45,7 +45,8 @@ function findArtifactConfig(artifactRoot: string): string | undefined {
   for (const name of [CONFIG_FILENAME, LEGACY_CONFIG_FILENAME]) {
     const candidate = path.join(artifactRoot, name);
     try {
-      if (fs.statSync(candidate).isFile()) return candidate;
+      const stat = fs.lstatSync(candidate);
+      if (stat.isFile() || stat.isSymbolicLink()) return candidate;
     } catch {
       // Not present/readable as a regular file; try the legacy name.
     }
@@ -54,6 +55,26 @@ function findArtifactConfig(artifactRoot: string): string | undefined {
 }
 
 function parseConfig(file: string, source: 'explicit' | 'artifact-legacy'): CasefileConfig {
+  if (source === 'artifact-legacy') {
+    try {
+      if (fs.lstatSync(file).isSymbolicLink()) {
+        return {
+          ignore: [],
+          source,
+          file: path.basename(file),
+          error: 'artifact-local suppression policy must not be a symlink',
+        };
+      }
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code ?? 'unknown-error';
+      return {
+        ignore: [],
+        source,
+        file: path.basename(file),
+        error: `trusted suppression policy could not be inspected (${code})`,
+      };
+    }
+  }
   let rawBytes: Buffer;
   try {
     rawBytes = fs.readFileSync(file);

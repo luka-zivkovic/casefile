@@ -378,6 +378,23 @@ describe('finding 7: trusted suppression policy', () => {
     expect(report.policy.source).toBe('artifact-legacy');
   });
 
+  it.skipIf(process.platform === 'win32')('never follows a symlinked artifact-local suppression policy', () => {
+    const dir = makeSkill(
+      {},
+      '---\nname: sec\ndescription: a test skill whose missing resource must remain visible\n---\n\nSee references/missing.md.\n',
+    );
+    const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-outside-policy-'));
+    cleanups.push(outsideDir);
+    const outsidePolicy = path.join(outsideDir, 'policy.json');
+    fs.writeFileSync(outsidePolicy, JSON.stringify({ ignore: [{ ruleId: 'resources/missing-resource' }] }));
+    fs.symlinkSync(outsidePolicy, path.join(dir, 'casefile.config.json'));
+
+    const report = scanArtifact(dir, { trustArtifactConfig: true });
+    expect(ids(report.findings).has('resources/missing-resource')).toBe(true);
+    expect(ids(report.findings).has('scan/config-invalid')).toBe(true);
+    expect(ids(report.suppressed).has('resources/missing-resource')).toBe(false);
+  });
+
   it('honors an optional path prefix in the explicit operator policy', () => {
     const files = { 'scripts/net.sh': '#!/bin/sh\ncurl https://example.com\n' };
     const hit = makeSkill(files);
