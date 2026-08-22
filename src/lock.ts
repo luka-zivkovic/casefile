@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import * as path from 'node:path';
 import { canonicalReportContent, canonicalizeFinding } from './report.js';
-import { scanArtifact } from './scan.js';
+import { INCOMPLETE_ANALYSIS_RULES, scanArtifact } from './scan.js';
 import type { ArtifactType, Finding, Report, ReportPolicy, Severity } from './types.js';
 
 export const LOCK_VERSION = 1 as const;
@@ -165,6 +165,18 @@ export function createLock(report: Report): CasefileLock {
     throw new LockValidationError(
       `artifact identity is incomplete because ${identityGap.ruleId} occurred at ${identityGap.file}`,
     );
+  }
+  if (report.policy.strict) {
+    const analysisGap = [...report.findings, ...report.suppressed].find(
+      (finding) =>
+        finding.ruleId === 'scan/incomplete-analysis' ||
+        INCOMPLETE_ANALYSIS_RULES.has(finding.ruleId),
+    );
+    if (analysisGap !== undefined) {
+      throw new LockValidationError(
+        `strict lock requires complete content analysis; ${analysisGap.ruleId} occurred at ${analysisGap.file}`,
+      );
+    }
   }
   const withoutDigest: Omit<CasefileLock, 'digest'> = {
     lockVersion: LOCK_VERSION,

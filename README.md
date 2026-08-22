@@ -84,7 +84,9 @@ vendored/generated dirs like `node_modules`, `dist`, `build`, and `venv`.
 Eligible text is content-analyzed subject to the documented 5 MB memory cap.
 Core `SKILL.md`, hook JSON, and plugin manifests use the same cap; oversized or
 unreadable input produces explicit incomplete-analysis evidence rather than an
-unbounded read. Only skill *discovery* (and therefore structural/resource/
+unbounded read. Symlink entries are never followed for content analysis; their
+target text remains identity-bearing and a skipped core symlink is reported as
+incomplete analysis. Only skill *discovery* (and therefore structural/resource/
 quality rules) prunes vendored dirs, so third-party code does not generate
 style noise.
 
@@ -166,7 +168,10 @@ The lock contains no artifact path or timestamp. Its own SHA-256 digest covers
 all canonical lock content except the digest field itself, so repeated scans
 and copies of the same artifact at another location create identical locks.
 Write the lock outside the scanned artifact to avoid a self-referential content
-hash. Lock creation refuses incomplete artifact identity. The CLI resolves the
+hash. Lock creation always refuses incomplete artifact identity, and a strict
+lock also refuses incomplete content analysis. A non-strict lock may preserve a
+snapshot with explicit incomplete-analysis findings; it certifies those exact
+artifact bytes and findings, not uninspected behavior. The CLI resolves the
 existing real output parent, rejects containment through symlink aliases and a
 symlink destination file, and writes the lock atomically.
 
