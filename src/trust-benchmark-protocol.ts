@@ -182,6 +182,7 @@ export function isSafeArtifactRelativePath(value: string): boolean {
     value.length > 4096 ||
     CONTROL.test(value) ||
     value.includes('\\') ||
+    /^[A-Za-z]:/.test(value) ||
     path.posix.isAbsolute(value) ||
     path.win32.isAbsolute(value)
   ) {
