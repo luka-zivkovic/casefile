@@ -4,6 +4,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Ajv2020, type AnySchema } from 'ajv/dist/2020.js';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildReport } from '../src/report.js';
 import { scanArtifact } from '../src/scan.js';
@@ -11,6 +12,7 @@ import { adaptCasefileReport, runCasefileBenchmarkAdapter } from '../src/trust-b
 import {
   decodeTrustBenchmarkAdapterRequest,
   decodeTrustBenchmarkToolResult,
+  isSafeArtifactRelativePath,
   parseTrustBenchmarkAdapterRequest,
   TrustBenchmarkProtocolError,
   validateTrustBenchmarkToolResult,
@@ -24,9 +26,31 @@ import {
 
 const QUALIFICATION = path.resolve('protocol/v1/qualification/manifest.json');
 const PROTOCOL_MANIFEST = path.resolve('protocol/v1/protocol-manifest.json');
+const TOOL_RESULT_SCHEMA = path.resolve('protocol/v1/schemas/tool-result.schema.json');
+const QUALIFICATION_SCHEMA = path.resolve('protocol/v1/schemas/qualification-manifest.schema.json');
 const ADAPTER_CLI = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist', 'trust-benchmark-adapter-cli.js');
 const TOOL_IDENTITY = 'a'.repeat(64);
 const cleanups: string[] = [];
+
+const SAFE_PATH_CASES = [
+  { label: 'empty', value: '', result: false, materialization: false },
+  { label: 'artifact root', value: '.', result: true, materialization: false },
+  { label: 'single segment', value: 'SKILL.md', result: true, materialization: true },
+  { label: 'canonical nested path', value: 'references/style.md', result: true, materialization: true },
+  { label: 'duplicate slash', value: 'references//style.md', result: false, materialization: false },
+  { label: 'dot segment', value: 'references/./style.md', result: false, materialization: false },
+  { label: 'leading dot segment', value: './SKILL.md', result: false, materialization: false },
+  { label: 'traversal', value: '../outside', result: false, materialization: false },
+  { label: 'nested traversal', value: 'references/../outside', result: false, materialization: false },
+  { label: 'trailing slash', value: 'references/', result: false, materialization: false },
+  { label: 'backslash', value: 'references\\style.md', result: false, materialization: false },
+  { label: 'drive absolute', value: 'C:/outside', result: false, materialization: false },
+  { label: 'drive relative', value: 'C:outside', result: false, materialization: false },
+  { label: 'POSIX absolute', value: '/outside', result: false, materialization: false },
+  { label: 'control character', value: 'references/\u0000style.md', result: false, materialization: false },
+  { label: 'maximum length', value: 'a'.repeat(4096), result: true, materialization: true },
+  { label: 'over maximum length', value: 'a'.repeat(4097), result: false, materialization: false },
+] as const;
 
 function temp(prefix: string): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
@@ -70,6 +94,28 @@ afterEach(() => {
 });
 
 describe('public trust-benchmark request and result v1', () => {
+  it.each(SAFE_PATH_CASES)('keeps JSON Schema and runtime path acceptance aligned: $label', (fixture) => {
+    const ajv = new Ajv2020({ allErrors: true, strict: true });
+    const resultSchema = JSON.parse(fs.readFileSync(TOOL_RESULT_SCHEMA, 'utf8')) as {
+      $defs: { relativePath: AnySchema };
+    };
+    const qualificationSchema = JSON.parse(fs.readFileSync(QUALIFICATION_SCHEMA, 'utf8')) as {
+      $defs: { safePath: AnySchema };
+    };
+    const validateResultPath = ajv.compile(resultSchema.$defs.relativePath);
+    const validateMaterializationPath = ajv.compile(qualificationSchema.$defs.safePath);
+    const runtimeResult = isSafeArtifactRelativePath(fixture.value);
+    const runtimeMaterialization = fixture.value !== '.' && runtimeResult;
+
+    expect(runtimeResult, `${fixture.label}: Casefile result runtime`).toBe(fixture.result);
+    expect(validateResultPath(fixture.value), `${fixture.label}: tool-result JSON Schema`).toBe(fixture.result);
+    expect(runtimeMaterialization, `${fixture.label}: qualification runtime`).toBe(fixture.materialization);
+    expect(
+      validateMaterializationPath(fixture.value),
+      `${fixture.label}: qualification JSON Schema`,
+    ).toBe(fixture.materialization);
+  });
+
   it('strictly validates the closed request and harness-owned identity challenge', () => {
     const valid = request('/tmp/artifact');
     expect(parseTrustBenchmarkAdapterRequest(valid)).toEqual(valid);

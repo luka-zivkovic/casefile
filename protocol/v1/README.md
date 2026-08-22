@@ -35,6 +35,13 @@ or benchmark label. Its SHA-256 `resultIdentity` covers the canonical result
 object excluding only `resultIdentity` itself. Objects use fixed field order;
 findings and coverage gaps use deterministic sort order.
 
+The single path `.` denotes the artifact root and is allowed only in finding
+and coverage-gap locations. Every qualification materialization path must name
+an entry below that root. Other paths consist of non-empty POSIX segments and
+reject empty, `.` or `..` segments, duplicate or trailing slashes, backslashes,
+drive prefixes, absolute paths, control characters, and values over 4096
+characters. The JSON Schemas and executable validators apply the same rule.
+
 `toolIdentityDigest` is a lowercase SHA-256 challenge supplied by the neutral
 harness and echoed exactly as `tool.identityDigest`. It identifies the harness-
 frozen distribution/config/environment statement; Casefile does not derive or
