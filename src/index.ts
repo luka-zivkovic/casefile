@@ -59,3 +59,47 @@ export type {
   ReportSummary,
   Severity,
 } from './types.js';
+export {
+  attachTrustBenchmarkResultIdentity,
+  canonicalTrustBenchmarkToolResultContent,
+  CASEFILE_BENCHMARK_ADAPTER_VERSION,
+  decodeTrustBenchmarkAdapterRequest,
+  decodeTrustBenchmarkToolResult,
+  isSafeArtifactRelativePath,
+  parseJsonRejectingDuplicateKeys,
+  parseTrustBenchmarkAdapterRequest,
+  TRUST_BENCHMARK_PROTOCOL_VERSION,
+  TrustBenchmarkProtocolError,
+  validateTrustBenchmarkToolResult,
+} from './trust-benchmark-protocol.js';
+export type {
+  TrustBenchmarkAdapterRequest,
+  TrustBenchmarkCompletedResult,
+  TrustBenchmarkCoverageGap,
+  TrustBenchmarkDisposition,
+  TrustBenchmarkErrorResult,
+  TrustBenchmarkFinding,
+  TrustBenchmarkIncompleteResult,
+  TrustBenchmarkResultStatus,
+  TrustBenchmarkStatusReason,
+  TrustBenchmarkToolResult,
+  TrustBenchmarkToolResultContent,
+  TrustBenchmarkTrack,
+  TrustBenchmarkUnsupportedResult,
+} from './trust-benchmark-protocol.js';
+export { adaptCasefileReport, runCasefileBenchmarkAdapter } from './trust-benchmark-adapter.js';
+export {
+  loadQualificationManifest,
+  materializeQualificationCase,
+  QUALIFICATION_VERSION,
+  validateQualificationManifest,
+} from './trust-benchmark-qualification.js';
+export type {
+  LoadedQualificationManifest,
+  QualificationCase,
+  QualificationClassificationCase,
+  QualificationExpected,
+  QualificationGeneratedFile,
+  QualificationManifest,
+  QualificationStatusCase,
+} from './trust-benchmark-qualification.js';
