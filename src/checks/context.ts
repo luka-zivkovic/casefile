@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { decodeUtf8Fatal, MAX_SCAN_FILE_BYTES } from '../io.js';
 import type { ArtifactType, Finding, PluginRef, Severity, SkillRef } from '../types.js';
 import type { WalkEntry } from '../walk.js';
 
@@ -39,8 +40,7 @@ export function finding(
  */
 export const MAX_LINE_LENGTH = 2000;
 
-/** Max file size for content checks; larger files are skipped (still hashed). */
-export const MAX_SCAN_FILE_BYTES = 5 * 1024 * 1024;
+export { MAX_SCAN_FILE_BYTES } from '../io.js';
 
 export interface CappedLines {
   lines: string[];
@@ -84,8 +84,9 @@ export function readTextChecked(entry: { abs: string; rel: string }, findings: F
   try {
     size = fs.statSync(entry.abs).size;
   } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code ?? 'UNKNOWN';
     findings.push(
-      finding('scan/unreadable-file', 'info', `file could not be read and was skipped: ${(err as Error).message}`, entry.rel),
+      finding('scan/unreadable-file', 'info', `file could not be read and was skipped (${code})`, entry.rel),
     );
     return null;
   }
@@ -94,17 +95,22 @@ export function readTextChecked(entry: { abs: string; rel: string }, findings: F
       finding(
         'scan/file-too-large',
         'info',
-        `file is ${size} bytes (limit ${MAX_SCAN_FILE_BYTES}); content checks skipped, hashed by size+name`,
+        `file is ${size} bytes (limit ${MAX_SCAN_FILE_BYTES}); content checks skipped; readable bytes remain covered by artifact identity`,
         entry.rel,
       ),
     );
     return null;
   }
   try {
-    return fs.readFileSync(entry.abs, 'utf-8');
+    return decodeUtf8Fatal(fs.readFileSync(entry.abs), entry.rel);
   } catch (err) {
+    if ((err as Error).message === `${entry.rel} is not valid UTF-8`) {
+      findings.push(finding('scan/invalid-utf8', 'info', 'file is not valid UTF-8 and content checks were skipped', entry.rel));
+      return null;
+    }
+    const code = (err as NodeJS.ErrnoException).code ?? 'UNKNOWN';
     findings.push(
-      finding('scan/unreadable-file', 'info', `file could not be read and was skipped: ${(err as Error).message}`, entry.rel),
+      finding('scan/unreadable-file', 'info', `file could not be read and was skipped (${code})`, entry.rel),
     );
     return null;
   }

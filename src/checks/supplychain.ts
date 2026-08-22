@@ -31,11 +31,12 @@ export function supplyChainCheck(ctx: CheckContext): Finding[] {
         continue;
       }
       if (resolved !== realRoot && !resolved.startsWith(realRoot + path.sep)) {
+        const target = fs.readlinkSync(entry.abs);
         findings.push(
           finding(
             'supplychain/symlink-escape',
             'critical',
-            `symlink resolves outside the artifact directory: ${resolved}`,
+            `symlink target resolves outside the artifact directory: ${target}`,
             entry.rel,
           ),
         );
