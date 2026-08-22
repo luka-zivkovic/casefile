@@ -8,12 +8,14 @@
     "node": ">=20"
   },
   "bin": {
-    "casefile": "dist/cli.js"
+    "casefile": "dist/cli.js",
+    "casefile-benchmark-adapter": "dist/trust-benchmark-adapter-cli.js"
   },
   "main": "dist/index.js",
   "files": [
     "dist",
-    "benchmark"
+    "benchmark",
+    "protocol"
   ],
   "scripts": {
     "build": "tsc",
