@@ -1,13 +1,21 @@
 # casefile — plan
 
+Status: **documentation-first target plan**
 
+Last reviewed: 2026-08-22
+
+`PRODUCT.md` defines the product. This plan sequences work; it does not expand
+scope beyond deterministic, no-execution trust intake.
+The concrete cross-product order and batch exit gates are vendored in
+[`docs/implementation-batches.md`](docs/implementation-batches.md).
 
 ## Vision
 
 Agents gain capabilities by installing skills and plugins the way apps gain
-capabilities by installing packages. There is no `npm audit` for that supply
-chain. casefile is that missing tool: **verify and maintain agent
-capabilities.**
+capabilities by installing packages. Security tools for this ecosystem now
+exist, including Snyk Agent Scan, but their trust boundaries differ. Casefile
+targets a narrower lifecycle: deterministic, offline, no-execution admission
+evidence plus lock and later verification.
 
 Two complementary tools, one lifecycle:
 
@@ -15,57 +23,64 @@ Two complementary tools, one lifecycle:
 - **casefile verifies** — makes a capability trustworthy (audit, gating,
   provenance).
 
-casefile answers "should I trust this skill/plugin, and did it change?" It is
-deliberately mechanical and reproducible: same bytes in, same report out.
+casefile answers "does this artifact's static evidence satisfy my admission
+policy, and did it change?" It is deliberately mechanical and reproducible:
+same readable bytes and coverage gaps in, same canonical report identity out.
 
 ## Milestones
 
-### M0 — static scanner (this milestone)
+### Foundation — delivered in the current working tree
 
-A TypeScript CLI that statically scans a skill dir, plugin dir, or marketplace
-root and emits a versioned trust/audit report. No code is executed.
+- Static skill/plugin/marketplace discovery without artifact execution.
+- Structural, resource, capability, supply-chain, injection, and scan-hygiene
+  findings.
+- Versioned deterministic reports, canonical artifact identity, and SARIF.
+- Operator-owned suppression policy and strict incomplete-analysis handling.
+- Digest-first lock/verify with drift classification.
+- Authored manifest-driven regression corpus with narrow claims.
 
-- Tolerant frontmatter parser (ported from overclock `validate_skill.py`).
-- Five check categories: structural, resource integrity, capability audit,
-  supply-chain hygiene, prompt-injection heuristics.
-- Versioned JSON report + human rendering; content hash for change detection.
-- Local SQLite history; `history` command.
-- Exit codes for CI gating.
+Static analysis cannot prove behavioral safety. That limit remains visible in
+reports, docs, and public claims.
 
-Static analysis cannot prove behavioral safety — it raises signal for human
-review and blocks the obvious. That limit is stated in every report.
+### M1 — strengthen the static intake surface
 
-### M1 — behavioral probes
+- Prioritize additional agent artifact ecosystems from observed user demand.
+- Define format adapters without weakening the shared artifact-identity and
+  no-execution invariants.
+- Improve evidence explanations, remediation context, and policy ergonomics
+  while keeping findings deterministic.
+- Add standalone diff/gate workflows on top of verified lock evidence.
 
-Run a skill and observe what it actually does (network egress, filesystem
-writes, secret access) against canary endpoints.
+### M2 — evidence portability
 
-> **HARD PREREQUISITE: a real sandbox.** M1 requires container/VM isolation, or
-> `sandbox-exec` with a network-deny profile plus canary endpoints. Running
-> untrusted skills under `claude -p` with permissive tools is **unsafe** and is
-> not an acceptable M1 implementation — a malicious skill would execute for
-> real. No behavioral testing ships until the sandbox exists.
+- Evaluate signing or attestations so report provenance can be verified across
+  machines and organizations.
+- Define a stable integration contract for CI and potential Dailies policy
+  consumption without moving release decisions into Casefile.
+- Add a local report viewer only if real users need it; the viewer must render
+  existing evidence rather than create a second analysis engine.
 
-### M2 — diff / gate / lockfile
+### M3 — blind comparative trust benchmark
 
-`casefile.lock` pinning approved content hashes; `casefile diff` between two
-versions; a CI gate that fails on new criticals or on any capability the lock
-did not approve. Builds directly on the M0 content hash and report schema.
-
-### M3 — local report viewer + signed reports
-
-A local viewer for reports and history, and signed reports so a report's
-provenance (which scanner version, over which bytes) is verifiable.
+Design a sealed, independently labeled benchmark following
+`docs/decisions/0001-benchmark-claims-and-corpus-separation.md`. Preregister
+the sampling frame, review/adjudication protocol, sample size and stopping
+rule, metrics and uncertainty, unsupported-format handling, frozen tool
+versions, execution conditions, and publication rules before running Casefile
+or competitors on the hidden set.
 
 ## Demand gates
 
-**M1+ is gated on external users actually using M0** — same bar as any new
-platform bet. We do not build the sandbox, the viewer, or signing on
-speculation. If M0 does not earn real usage, the later milestones do not start.
+Additional ecosystems, signing, a viewer, and broad comparative work require
+evidence of real use. Improve the current admission-and-lock workflow before
+adding adjacent surfaces.
 
 ## Non-goals
 
 - Hosted registry or SaaS backend.
-- Dynamic MCP server testing.
+- Dynamic or sandboxed execution of untrusted artifacts.
+- MCP traffic proxying or runtime guardrails.
 - A skill-authoring editor.
 - Capability optimization (that is SkillOpt's job).
+- LLM-output evaluation or release-policy decisions.
+- Semantic clustering in the current plan.

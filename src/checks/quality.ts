@@ -9,7 +9,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { parseFrontmatter } from '../frontmatter.js';
 import type { Finding } from '../types.js';
-import { finding, relTo, type CheckContext } from './context.js';
+import { finding, readTextChecked, relTo, type CheckContext } from './context.js';
 import { hasAntiTrigger, hasPositiveRoutingTrigger } from './routing.js';
 
 /** Body budget (est. tokens, chars/4) when the skill ships no references/. */
@@ -67,12 +67,8 @@ function checkSkill(ctx: CheckContext, skillDir: string): Finding[] {
   const skillFile = path.join(skillDir, 'SKILL.md');
   if (!fs.existsSync(skillFile)) return findings; // reported by the structural check
   const relSkill = relTo(ctx.root, skillFile);
-  let text: string;
-  try {
-    text = fs.readFileSync(skillFile, 'utf-8');
-  } catch {
-    return findings; // unreadable SKILL.md is reported by the structural check
-  }
+  const text = readTextChecked({ abs: skillFile, rel: relSkill }, findings);
+  if (text === null) return findings;
   let body = text;
   let desc = '';
   try {

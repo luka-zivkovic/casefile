@@ -1,5 +1,10 @@
 # Launch kit
 
+> **Status: historical draft material.** Product scope and permitted benchmark
+> claims are governed by [`../PRODUCT.md`](../PRODUCT.md) and
+> [ADR-0001](../docs/decisions/0001-benchmark-claims-and-corpus-separation.md).
+> If this material conflicts with either document, update it before use.
+
 Materials for casefile's first public moment: a scan of 16 popular Claude Code
 plugin/skill collections, published alongside `casefile scan` as the call to action.
 

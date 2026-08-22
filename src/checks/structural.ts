@@ -7,7 +7,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { FrontmatterError, NAME_RE, parseFrontmatter } from '../frontmatter.js';
 import type { Finding } from '../types.js';
-import { finding, relTo, type CheckContext } from './context.js';
+import { finding, readTextChecked, relTo, type CheckContext } from './context.js';
 import { hasAntiTrigger, hasPositiveRoutingTrigger } from './routing.js';
 
 const MAX_BODY_LINES = 500;
@@ -22,14 +22,8 @@ function checkSkill(ctx: CheckContext, skillDir: string, plugin?: string): Findi
     return [finding('structural/skill-md-missing', 'critical', 'SKILL.md does not exist', relSkill)];
   }
 
-  let text: string;
-  try {
-    text = fs.readFileSync(skillFile, 'utf-8');
-  } catch (err) {
-    return [
-      finding('scan/unreadable-file', 'info', `SKILL.md could not be read and was skipped: ${(err as Error).message}`, relSkill),
-    ];
-  }
+  const text = readTextChecked({ abs: skillFile, rel: relSkill }, findings);
+  if (text === null) return findings;
   let fm: Record<string, string>;
   let body: string;
   try {
@@ -171,12 +165,11 @@ function checkPlugin(ctx: CheckContext, pluginDir: string): Finding[] {
   const findings: Finding[] = [];
   const manifest = path.join(pluginDir, '.claude-plugin', 'plugin.json');
   const relManifest = relTo(ctx.root, manifest);
-  let raw: string;
-  try {
-    raw = fs.readFileSync(manifest, 'utf-8');
-  } catch {
+  if (!fs.existsSync(manifest)) {
     return [finding('structural/plugin-json-missing', 'critical', '.claude-plugin/plugin.json is missing', relManifest)];
   }
+  const raw = readTextChecked({ abs: manifest, rel: relManifest }, findings);
+  if (raw === null) return findings;
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
