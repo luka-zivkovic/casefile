@@ -14,10 +14,11 @@ import { supplyChainCheck } from './checks/supplychain.js';
 
 const CHECKS = [structuralCheck, resourceCheck, qualityCheck, capabilityCheck, supplyChainCheck, injectionCheck];
 
-const INCOMPLETE_ANALYSIS_RULES = new Set([
+export const INCOMPLETE_ANALYSIS_RULES = new Set([
   'scan/config-invalid',
   'scan/file-too-large',
   'scan/line-truncated',
+  'scan/symlink-not-analyzed',
   'scan/invalid-utf8',
   'scan/identity-incomplete',
   'scan/unreadable-directory',

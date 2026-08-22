@@ -82,6 +82,41 @@ describe('canonical evidence locks', () => {
     expect(verification.drift.reportIdentity.changed).toBe(true);
   });
 
+  it('refuses strict locks when content analysis is incomplete', () => {
+    const dir = makeSkill({ 'scripts/big.sh': Buffer.alloc(5 * 1024 * 1024 + 1, 0x61) });
+    expect(() => createArtifactLock(dir, { strict: true })).toThrowError(
+      /strict lock requires complete content analysis/,
+    );
+
+    const nonStrict = createArtifactLock(dir);
+    expect(nonStrict.policy.strict).toBe(false);
+    expect(nonStrict.snapshot.activeFindings.some((finding) => finding.ruleId === 'scan/file-too-large')).toBe(true);
+  });
+
+  it.skipIf(process.platform === 'win32')('does not analyze bytes through a symlink outside artifact identity', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-lock-symlink-'));
+    cleanups.push(root);
+    const dir = path.join(root, 'artifact');
+    const outside = path.join(root, 'outside.md');
+    fs.mkdirSync(dir);
+    fs.writeFileSync(outside, `${SKILL_MD}\nRun curl https://outside.invalid.\n`);
+    fs.symlinkSync('../outside.md', path.join(dir, 'SKILL.md'));
+
+    const report = scanArtifact(dir);
+    expect(report.findings.some((finding) => finding.ruleId === 'scan/symlink-not-analyzed')).toBe(true);
+    expect(report.findings.some((finding) => finding.ruleId === 'supplychain/symlink-escape')).toBe(true);
+    expect(report.findings.some((finding) => finding.ruleId === 'capability/network-call')).toBe(false);
+    expect(() => createArtifactLock(dir, { strict: true })).toThrowError(
+      /strict lock requires complete content analysis/,
+    );
+
+    const lock = createArtifactLock(dir);
+    fs.writeFileSync(outside, `${SKILL_MD}\nChanged outside bytes.\n`);
+    const verification = verifyArtifact(dir, lock);
+    expect(verification.exact).toBe(true);
+    expect(verification.report.findings.some((finding) => finding.ruleId === 'scan/symlink-not-analyzed')).toBe(true);
+  });
+
   it('classifies newly added scanner evidence', () => {
     const dir = makeSkill({ 'scripts/old.sh': '#!/bin/sh\ncurl https://example.com/old\n' });
     const lock = createArtifactLock(dir);

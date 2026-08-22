@@ -80,9 +80,9 @@ export function truncationFinding(rel: string, truncatedLines: number[]): Findin
  * oversized files instead of aborting the scan. Returns null when skipped.
  */
 export function readTextChecked(entry: { abs: string; rel: string }, findings: Finding[]): string | null {
-  let size: number;
+  let stat: fs.Stats;
   try {
-    size = fs.statSync(entry.abs).size;
+    stat = fs.lstatSync(entry.abs);
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code ?? 'UNKNOWN';
     findings.push(
@@ -90,12 +90,23 @@ export function readTextChecked(entry: { abs: string; rel: string }, findings: F
     );
     return null;
   }
-  if (size > MAX_SCAN_FILE_BYTES) {
+  if (stat.isSymbolicLink()) {
+    findings.push(
+      finding(
+        'scan/symlink-not-analyzed',
+        'info',
+        'symlink target content was not analyzed; only the link target text is covered by artifact identity',
+        entry.rel,
+      ),
+    );
+    return null;
+  }
+  if (stat.size > MAX_SCAN_FILE_BYTES) {
     findings.push(
       finding(
         'scan/file-too-large',
         'info',
-        `file is ${size} bytes (limit ${MAX_SCAN_FILE_BYTES}); content checks skipped; readable bytes remain covered by artifact identity`,
+        `file is ${stat.size} bytes (limit ${MAX_SCAN_FILE_BYTES}); content checks skipped; readable bytes remain covered by artifact identity`,
         entry.rel,
       ),
     );

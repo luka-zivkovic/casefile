@@ -179,7 +179,7 @@ export function renderMarkdown(report: Report): string {
   }
   lines.push('');
   lines.push(
-    '_Static analysis only — behavioral verification (M1) requires sandboxed execution and is out of scope for this report._',
+    '_Static analysis only: absence of findings is not proof of behavioral safety._',
   );
   return lines.join('\n');
 }
