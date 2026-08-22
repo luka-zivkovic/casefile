@@ -38,6 +38,10 @@ same readable bytes and coverage gaps in, same canonical report identity out.
 - Operator-owned suppression policy and strict incomplete-analysis handling.
 - Digest-first lock/verify with drift classification.
 - Authored manifest-driven regression corpus with narrow claims.
+- Public trust-benchmark protocol v1, an in-process no-execution Casefile
+  adapter, and a synthetic qualification-only corpus. The separately owned
+  `agent-artifact-trust-bench` repository owns comparator execution and raw
+  benchmark results (ADR-0002).
 
 Static analysis cannot prove behavioral safety. That limit remains visible in
 reports, docs, and public claims.
@@ -68,6 +72,11 @@ the sampling frame, review/adjudication protocol, sample size and stopping
 rule, metrics and uncertainty, unsupported-format handling, frozen tool
 versions, execution conditions, and publication rules before running Casefile
 or competitors on the hidden set.
+
+The public adapter boundary is delivered, but it deliberately freezes no blind
+sampling frame, corpus size, budget, stopping rule, comparator version, or
+independent corpus owner. Those remain Gate 5 decisions in the neutral
+`agent-artifact-trust-bench` repository.
 
 ## Demand gates
 

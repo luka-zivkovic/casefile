@@ -258,6 +258,56 @@ The separation between this visible regression suite and any future blind
 competitor benchmark is an accepted product rule; see
 [ADR-0001](docs/decisions/0001-benchmark-claims-and-corpus-separation.md).
 
+## Public neutral-benchmark adapter protocol
+
+Casefile ships its half of the future neutral benchmark integration under
+[`protocol/v1`](protocol/v1/README.md): closed JSON Schemas, a digest manifest,
+an in-process no-execution adapter, and a synthetic public qualification
+corpus. The separately owned `agent-artifact-trust-bench` repository owns the
+harness, comparator execution, sandbox enforcement, exact raw results,
+normalization, and any later sealed corpus or comparative claim. See accepted
+[ADR-0002](docs/decisions/0002-neutral-benchmark-ownership.md).
+
+The adapter handles exactly one request per process:
+
+```bash
+printf '%s\n' '{
+  "protocolVersion": 1,
+  "caseId": "qualification-negative",
+  "artifactRoot": "/absolute/path/to/skill",
+  "track": "common-static-skill",
+  "runIndex": 0,
+  "timeoutMs": 30000,
+  "environmentId": "node20-linux-x64@sha256:example",
+  "toolIdentityDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}' | casefile-benchmark-adapter
+```
+
+It reads one strict request object from stdin and writes one compact
+`tool-result` v1 object to stdout. Unknown fields, invalid UTF-8/JSON, invalid
+digests, and unsupported protocol versions exit 2 without a stdout value.
+Valid requests exit 0 with `completed`, `incomplete`, `unsupported`, or `error`;
+process timeout is owned and recorded by the neutral harness. Only `completed`
+results have `disposition: flag | clean`. Findings retain Casefile-native rule
+ids/severities and artifact-relative safe paths. Results exclude artifact root,
+wall clock, duration, labels, and raw-output references and include a canonical
+SHA-256 identity. The harness-owned `toolIdentityDigest` challenge is echoed as
+`tool.identityDigest`; the harness independently verifies the frozen tool,
+configuration, and environment behind it.
+
+The adapter always calls `scanArtifact` in-process with strict analysis, no
+suppression config, no history store, and no artifact execution. Casefile CI
+validates only this adapter and the public synthetic fixtures; it never runs a
+comparator or accesses a sealed corpus.
+
+[`protocol/v1/qualification/manifest.json`](protocol/v1/qualification/manifest.json)
+is marked `public-qualification` and `performanceClaimsAllowed: false`. Its
+positive/negative labels are transport sentinels, not a blind-benchmark
+ontology, and its results cannot support recall, precision, rank, or superiority
+claims. It is separate from the 31-artifact authored detector regression corpus
+above. Blind sampling, size, budget, stopping rules, comparator freezes, and
+independent corpus ownership remain Gate 5 work.
+
 ## Suppressing findings (CI)
 
 To accept a known finding without failing CI, keep the policy under operator
