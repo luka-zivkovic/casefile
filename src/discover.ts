@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { ArtifactType, PluginRef, SkillRef } from './types.js';
+import { readSmallUtf8File } from './io.js';
 import { SKIP_DIRS, VENDORED_DIRS } from './walk.js';
 
 export class DiscoveryError extends Error {}
@@ -62,7 +63,7 @@ function findSkillDirs(root: string): string[] {
 
 function pluginNameFor(skillDir: string, pluginRoot: string): string | undefined {
   try {
-    const raw = fs.readFileSync(path.join(pluginRoot, '.claude-plugin', 'plugin.json'), 'utf-8');
+    const raw = readSmallUtf8File(path.join(pluginRoot, '.claude-plugin', 'plugin.json'), 'plugin.json');
     const parsed = JSON.parse(raw) as { name?: string };
     if (typeof parsed.name === 'string') return parsed.name;
   } catch {

@@ -216,9 +216,11 @@ export function capabilityCheck(ctx: CheckContext): Finding[] {
     const skillFile = path.join(skill.dir, 'SKILL.md');
     if (!fs.existsSync(skillFile)) continue;
     const relSkill = relTo(ctx.root, skillFile);
+    const text = readTextChecked({ abs: skillFile, rel: relSkill }, findings);
+    if (text === null) continue;
     let fm: Record<string, string>;
     try {
-      ({ frontmatter: fm } = parseFrontmatter(fs.readFileSync(skillFile, 'utf-8')));
+      ({ frontmatter: fm } = parseFrontmatter(text));
     } catch {
       continue;
     }
@@ -242,9 +244,11 @@ export function capabilityCheck(ctx: CheckContext): Finding[] {
   for (const entry of ctx.files) {
     if (entry.isSymlink) continue;
     if (!/(^|\/)hooks\/.*\.json$|(^|\/)hooks\.json$/.test(entry.rel)) continue;
+    const text = readTextChecked(entry, findings);
+    if (text === null) continue;
     let parsed: unknown;
     try {
-      parsed = JSON.parse(fs.readFileSync(entry.abs, 'utf-8'));
+      parsed = JSON.parse(text);
     } catch {
       findings.push(finding('capability/hook-json-invalid', 'warning', 'hook file is not valid JSON', entry.rel));
       continue;

@@ -34,21 +34,40 @@ export interface WalkEntry {
   isSymlink: boolean;
 }
 
+export interface WalkGap {
+  /** Directory traversal or unsupported entry, relative to the walk root. */
+  rel: string;
+  kind: 'directory' | 'entry';
+  /** Stable OS error code; absolute host paths are deliberately omitted. */
+  code: string;
+}
+
+export interface WalkResult {
+  files: WalkEntry[];
+  gaps: WalkGap[];
+}
+
 /**
  * Walk all files under `root` (skipping only `.git`), without following
  * directory symlinks. Symlinked files are reported but not read through by
  * callers unless they choose to.
  */
-export function walkFiles(root: string): WalkEntry[] {
+export function walkArtifact(root: string): WalkResult {
   const out: WalkEntry[] = [];
+  const gaps: WalkGap[] = [];
   const walk = (dir: string) => {
     let entries: fs.Dirent[];
     try {
       entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
+    } catch (error) {
+      const rel = path.relative(root, dir).split(path.sep).join('/') || '.';
+      gaps.push({ rel, kind: 'directory', code: (error as NodeJS.ErrnoException).code ?? 'UNKNOWN' });
       return;
     }
     for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      // Git metadata is excluded regardless of whether a worktree represents
+      // it as a directory, a `gitdir:` file, or a symlink.
+      if (SKIP_DIRS.has(entry.name)) continue;
       const abs = path.join(dir, entry.name);
       const rel = path.relative(root, abs).split(path.sep).join('/');
       if (entry.isSymbolicLink()) {
@@ -56,14 +75,21 @@ export function walkFiles(root: string): WalkEntry[] {
         continue; // never follow symlinks while walking
       }
       if (entry.isDirectory()) {
-        if (!SKIP_DIRS.has(entry.name)) walk(abs);
+        walk(abs);
       } else if (entry.isFile()) {
         out.push({ abs, rel, isSymlink: false });
+      } else {
+        gaps.push({ rel, kind: 'entry', code: 'UNSUPPORTED_ENTRY_TYPE' });
       }
     }
   };
   walk(root);
-  return out;
+  return { files: out, gaps };
+}
+
+/** Compatibility wrapper for callers that only need the enumerated files. */
+export function walkFiles(root: string): WalkEntry[] {
+  return walkArtifact(root).files;
 }
 
 /** Heuristic: treat a file as binary if its first 8 KiB contain a NUL byte. */
@@ -81,8 +107,4 @@ export function isBinaryFile(abs: string): boolean {
   } finally {
     fs.closeSync(fd);
   }
-}
-
-export function readText(abs: string): string {
-  return fs.readFileSync(abs, 'utf-8');
 }
