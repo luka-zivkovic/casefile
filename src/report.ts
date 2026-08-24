@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import type { Artifact, Finding, Report, ReportPolicy, Severity } from './types.js';
 
 export const TOOL_NAME = 'casefile';
-export const TOOL_VERSION = '0.1.0';
+export const TOOL_VERSION = '0.2.1';
 export const REPORT_VERSION = 2 as const;
 
 const SEVERITY_ORDER: Record<Severity, number> = { critical: 0, warning: 1, info: 2 };

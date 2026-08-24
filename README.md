@@ -105,7 +105,7 @@ Reports are versioned (`reportVersion: 2`):
 ```jsonc
 {
   "reportVersion": 2,
-  "tool": { "name": "casefile", "version": "0.1.0" },
+  "tool": { "name": "casefile", "version": "0.2.1" },
   "scannedAt": "2026-07-12T22:13:40.276Z",
   "artifact": {
     "type": "plugin",
@@ -178,7 +178,7 @@ symlink destination file, and writes the lock atomically.
 ```jsonc
 {
   "lockVersion": 1,
-  "tool": { "name": "casefile", "version": "0.1.0" },
+  "tool": { "name": "casefile", "version": "0.2.1" },
   "reportVersion": 2,
   "artifact": { "type": "plugin", "contentHash": "<sha256>" },
   "policy": { "source": "explicit", "strict": true, "contentHash": "<sha256>" },

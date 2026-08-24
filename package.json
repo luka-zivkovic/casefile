@@ -1,6 +1,6 @@
 {
   "name": "casefile",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "npm audit for agent capabilities — static trust/audit scanner for agent skills, plugins, and marketplaces.",
   "license": "MIT",
   "type": "module",
