@@ -1,5 +1,6 @@
+import * as fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildReport, canonicalReportContent, renderMarkdown } from '../src/report.js';
+import { buildReport, canonicalReportContent, renderMarkdown, TOOL_VERSION } from '../src/report.js';
 import type { Artifact, Finding } from '../src/types.js';
 
 const artifact: Artifact = { type: 'skill', path: '/tmp/x', contentHash: 'abc123' };
@@ -12,6 +13,13 @@ const findings: Finding[] = [
 
 describe('buildReport', () => {
   const report = buildReport(artifact, findings, 5);
+
+  it('keeps the reported tool version aligned with the package version', () => {
+    const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
+      version: string;
+    };
+    expect(TOOL_VERSION).toBe(packageJson.version);
+  });
 
   it('emits a versioned schema', () => {
     expect(report.reportVersion).toBe(2);
