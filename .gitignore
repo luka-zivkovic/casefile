@@ -3,6 +3,7 @@
 
 node_modules/
 dist/
+/reports/
 *.tsbuildinfo
 *.db
 .DS_Store

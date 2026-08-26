@@ -19,8 +19,25 @@ turning competitor behavior into product authority.
 
 ## Quickstart
 
+Run Casefile directly from npm:
+
 ```bash
-npm install
+npx casefile@latest scan ./path/to/skill-or-plugin
+```
+
+Or install the CLI globally:
+
+```bash
+npm install --global casefile
+casefile scan ./path/to/skill-or-plugin
+```
+
+To work from source:
+
+```bash
+git clone https://github.com/luka-zivkovic/casefile.git
+cd casefile
+npm ci
 npm run build            # tsc -> dist/
 
 # Scan a skill dir, a plugin dir, or a marketplace root.
@@ -394,6 +411,9 @@ GitHub Actions runs all three gates on Node 20 and Node 22.
 
 Test fixtures live under `test/fixtures/` — a benign skill and a malicious
 plugin that exercises the injection, exfiltration, and symlink-escape rules.
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) before proposing a change. Security
+issues should follow the private reporting process in [SECURITY.md](./SECURITY.md).
 
 ## License
 
