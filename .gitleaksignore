@@ -1,0 +1,2 @@
+# Intentional short-base64 negative benchmark fixture; decodes to ordinary prose.
+2ca97e90caba6760cc11f04dc64703176f3c7c7d:benchmark/manifest.json:generic-api-key:321
