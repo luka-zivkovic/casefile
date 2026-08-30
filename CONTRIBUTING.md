@@ -38,3 +38,7 @@ Do not include credentials, private customer artifacts, hidden benchmark data,
 or generated scans of third-party repositories.
 
 Report security problems through `SECURITY.md`, not a public pull request.
+
+When publishing a Casefile release, update the exact version in the README's
+reviewed-internal-artifact example so the worked pin matches the intended
+release.
