@@ -147,6 +147,8 @@ Untrusted text is sanitized before it appears in terminal output, so a scanned a
 
 ## Use it in CI
 
+### Unreviewed or third-party artifacts
+
 This GitHub Actions job fails on warnings, uploads SARIF, and avoids writing to the local scan-history database:
 
 ```yaml
@@ -173,6 +175,76 @@ jobs:
 ```
 
 If you do not use GitHub code scanning, remove the upload step and use `--json` or the default text report.
+
+### Reviewed internal artifacts
+
+Casefile may emit warning-level static signals for ordinary network-call patterns, secret-looking environment-variable reads, shell-hook commands, and certain writes outside an artifact. An internally maintained skill may legitimately need those capabilities. Critical composite patterns such as download-and-execute still block under this profile, and the absence of a finding does not prove that a capability is absent. Use a lock to bind the review to the exact artifact bytes and Casefile evidence.
+
+Pin Casefile as an exact development dependency so scans and locks do not drift merely because a newer CLI was published:
+
+```bash
+npm install --save-dev --save-exact casefile@0.2.1
+```
+
+`0.2.1` is the current release when this example was written. Choose the intended release explicitly, commit both dependency manifests, and update the pin only through the upgrade procedure below.
+
+For initial admission or an intentional update, start from a clean checkout or deterministic staging directory and run:
+
+```bash
+npx --no-install casefile scan ./skills/example \
+  --strict \
+  --fail-on critical \
+  --no-store
+
+mkdir -p .casefile/locks
+npx --no-install casefile lock ./skills/example \
+  --strict \
+  --out ./.casefile/locks/example.casefile-lock.json
+```
+
+The first command must pass, and a human must review its warnings and the artifact diff before accepting the new lock. The second command records the reviewed bytes and evidence; it does **not** apply the severity gate and therefore cannot replace the first command. Run both against a stable checkout because `lock` performs its own scan. Commit the candidate lock with the artifact change, then have the designated owner review the final lock-bearing commit.
+
+Commit the lock outside the scanned artifact, then require both checks in CI:
+
+```yaml
+name: Reviewed skill
+
+on: [push, pull_request]
+
+jobs:
+  casefile:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Reject critical findings or incomplete analysis
+        run: >-
+          npx --no-install casefile scan ./skills/example
+          --strict --fail-on critical --no-store
+      - name: Reject unreviewed evidence drift
+        run: >-
+          npx --no-install casefile verify ./skills/example
+          --strict --lock ./.casefile/locks/example.casefile-lock.json
+```
+
+This initial profile deliberately has no `--config` or `--trust-artifact-config`: warnings remain visible but non-blocking, critical findings and strict incomplete-analysis findings block, and every artifact-byte change causes lock drift. Keep `--strict` identical on `scan`, `lock`, and `verify`.
+
+Operational requirements:
+
+- Protect the artifact, lock, `package.json`, `package-lock.json`, and workflow. Require designated `CODEOWNERS` approval on the final commit, dismiss stale approvals when any protected input changes, and prevent branch-protection bypass. A lock digest is a checksum, not a signature.
+- Generate and commit candidate locks locally; never regenerate or commit a trusted lock automatically in CI. Review the final artifact-and-lock diff in the same change.
+- Casefile hashes every readable artifact byte except `.git`, including generated and vendored files. Prefer the smallest independently reviewable artifact root. If the repository root is the artifact, scan a deterministic staging directory so the lock can remain in the protected repository, or store the lock in a separately protected repository or evidence store.
+- Content identity does not include POSIX file modes. Protect executable-bit changes through the same final-commit review and source-control checks.
+- Upgrade Casefile in a dedicated reviewed change: update the exact dependency, run the admission scan, inspect tool/report/finding drift from `verify --json`, and intentionally regenerate the lock.
+- The example gates only `./skills/example`. For several artifacts, maintain a protected inventory of artifact-to-lock pairs, repeat both checks at the highest supported artifact granularity (skill, plugin, or marketplace), and make CI fail when a newly discovered artifact is absent from that inventory. Merely repeating hardcoded commands can miss a newly added skill.
+
+Current limitation: strict mode promotes Casefile's named analysis gaps, not every opaque or unparsed input. Malformed hook JSON (`capability/hook-json-invalid`) remains a warning. `supplychain/binary-file` is a warning for unexpected extensions and info for expected media or font extensions. Review both warning and info findings explicitly; an extension-based classification is not proof that binary content is safe.
 
 ## Operator-owned policy
 

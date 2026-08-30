@@ -5,6 +5,8 @@ All notable changes to Casefile are recorded here.
 ## Unreleased
 
 - Added public contribution and security-reporting guidance.
+- Documented a lock-first CI workflow for reviewed internal capabilities, with
+  exact tool pinning and separate severity and evidence-drift checks.
 - Removed legacy exploratory third-party scan reports from the product
   repository; comparative evidence belongs to the separately governed neutral
   benchmark workflow.
