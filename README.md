@@ -2,7 +2,7 @@
 
 # Casefile
 
-### Deterministic trust intake for agent capabilities
+### Inspect an agent skill before you install it.
 
 Statically inspect Claude Code skills, plugins, and marketplaces **without executing them**.
 
@@ -17,12 +17,17 @@ Statically inspect Claude Code skills, plugins, and marketplaces **without execu
 
 </div>
 
----
-
 Casefile gives operators a reviewable record of what an agent capability contains, what it appears able to do, and whether it has changed since approval.
 
 > [!IMPORTANT]
 > Casefile never executes the artifact it scans. It uses static analysis to raise useful review signals and block obvious risks. It cannot prove that an artifact is behaviorally safe.
+
+<p align="center">
+  <picture>
+    <source media="(max-width: 600px)" srcset="docs/assets/workflow-mobile.svg">
+    <img src="docs/assets/workflow.svg" width="100%" alt="Casefile scans without executing the artifact, supports human review, locks the reviewed state, and verifies later evidence drift.">
+  </picture>
+</p>
 
 ## At a glance
 
@@ -98,6 +103,10 @@ casefile scan ./plugin \
 ```
 
 ### 3. Lock an approved state
+
+After the scan passes your policy and you have reviewed its findings, record
+the accepted state. `lock` performs its own scan but does not replace the
+severity gate or human review.
 
 ```bash
 casefile lock ./plugin \
