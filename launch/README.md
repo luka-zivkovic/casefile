@@ -8,22 +8,29 @@
 Materials for casefile's first public moment: a scan of 16 popular Claude Code
 plugin/skill collections, published alongside `casefile scan` as the call to action.
 
-These are **drafts for Luka to review, edit, and send** — nothing here has been sent or
-published.
+These are **drafts for Luka to review, edit, and send**. The package and repository are
+already public; the post and disclosure notes themselves remain unsent drafts as far as
+this kit records.
 
 ## What's here
 
 - `disclosure/` — heads-up notes to the maintainers of the three repos we name with
   notable findings. Send these **before** publishing anything public.
-- `launch-post.md` — the public write-up, built from `reports/2026-07-13/SUMMARY.md`.
-- `naming-shortlist.md` — the naming exploration that led to "casefile" (resolved).
+- `launch-post.md` — the public write-up. It was originally built from an exploratory
+  scan of third-party collections whose per-repo reports have since been removed from
+  this repository (see `CHANGELOG.md`, Unreleased). Comparative evidence belongs to the
+  separately governed neutral benchmark workflow described in
+  [ADR-0002](../docs/decisions/0002-neutral-benchmark-ownership.md).
+- `naming-shortlist.md` — the naming exploration that led to "casefile" (resolved
+  2026-08-12).
 
 ## Suggested order (why disclosure comes first)
 
-1. **Pick a name** and make the repo public (license is already MIT).
-2. **Send the disclosure notes** to the three maintainers. Give them a window (5–7 business
+1. **Send the disclosure notes** to the three maintainers. Give them a window (5–7 business
    days is customary) before the public post goes up.
-3. **Publish the launch post.** It links to the public repo and the full `reports/` directory.
+2. **Publish the launch post.** It links to the public repo. It must not link to per-repo
+   scan reports, which no longer live here; any comparative evidence has to come from the
+   neutral benchmark workflow in ADR-0002.
 
 Sending maintainers a heads-up before publishing findings about their code is the whole
 credibility play for a *trust* product: "we told them before we told you." It costs a week and
@@ -34,5 +41,5 @@ doc-example paths, not real bugs.
 ## The one rule for all of this
 
 Every public claim is a **static-analysis signal for human review, not a verdict of malice.**
-The SUMMARY leads with this; the post and every disclosure note repeat it. A pipe-to-shell in an
-installer is a fact worth surfacing, not an accusation. Keep that framing everywhere.
+The post and every disclosure note repeat it. A pipe-to-shell in an installer is a fact worth
+surfacing, not an accusation. Keep that framing everywhere.
