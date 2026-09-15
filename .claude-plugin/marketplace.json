@@ -1,0 +1,28 @@
+{
+  "name": "casefile",
+  "description": "Casefile — inspect an agent skill, plugin, or marketplace before you install it, without executing it.",
+  "owner": {
+    "name": "Luka Zivkovic"
+  },
+  "plugins": [
+    {
+      "name": "casefile",
+      "source": "./plugins/casefile",
+      "description": "Teach your coding agent to run a Casefile static scan over a skill, plugin, or marketplace directory before installing it. Reads the text or JSON report, ties every finding to a file and line, explains findings as review signals rather than verdicts, and offers lock/verify for drift on reviewed artifacts. Never executes the artifact and never installs anything without asking.",
+      "version": "0.2.1",
+      "category": "security",
+      "keywords": [
+        "security",
+        "audit",
+        "static-analysis",
+        "supply-chain",
+        "prompt-injection",
+        "skills",
+        "plugins",
+        "marketplace",
+        "sarif",
+        "lockfile"
+      ]
+    }
+  ]
+}
