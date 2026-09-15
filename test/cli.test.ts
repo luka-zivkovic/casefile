@@ -15,9 +15,9 @@ interface RunResult {
   stderr: string;
 }
 
-function run(args: string[]): RunResult {
+function run(args: string[], cwd?: string): RunResult {
   try {
-    const stdout = execFileSync('node', [CLI, ...args], { encoding: 'utf-8' });
+    const stdout = execFileSync('node', [CLI, ...args], { encoding: 'utf-8', cwd });
     return { status: 0, stdout, stderr: '' };
   } catch (err) {
     const e = err as { status: number; stdout: string; stderr: string };
@@ -344,6 +344,58 @@ describe('casefile CLI', () => {
     expect(invalid.status).toBe(2);
     expect(invalid.stderr).toContain('invalid lock: lock digest mismatch');
     fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('init writes a documented starter policy that suppresses nothing and never a lock', () => {
+    const base = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-cli-init-'));
+    const policyDir = path.join(base, 'policy');
+    const created = run(['init', policyDir]);
+    expect(created.status).toBe(0);
+    const file = path.join(policyDir, 'casefile.config.json');
+    expect(created.stdout).toContain(`wrote ${file}`);
+    expect(created.stdout).toContain('No lock was created');
+    expect(fs.readdirSync(policyDir)).toEqual(['casefile.config.json']);
+
+    const starter = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    expect(starter.ignore).toEqual([]);
+    expect(Array.isArray(starter.$comment)).toBe(true);
+    expect(starter.$comment.join('\n')).toContain('ruleId');
+
+    // The starter is a valid explicit policy: no config-invalid finding and nothing suppressed.
+    const res = run(['scan', fixture('benign-skill'), '--json', '--config', file, '--no-store']);
+    expect(res.status).toBe(0);
+    const report = JSON.parse(res.stdout);
+    expect(report.policy.source).toBe('explicit');
+    expect(report.findings.some((f: { ruleId: string }) => f.ruleId === 'scan/config-invalid')).toBe(false);
+    expect(report.suppressed).toEqual([]);
+    fs.rmSync(base, { recursive: true, force: true });
+  });
+
+  it('init defaults to the current directory and refuses to overwrite', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-cli-init-cwd-'));
+    expect(run(['init'], dir).status).toBe(0);
+    const file = path.join(dir, 'casefile.config.json');
+    fs.writeFileSync(file, '{"ignore":[{"ruleId":"capability/network-call"}]}\n');
+    const refused = run(['init'], dir);
+    expect(refused.status).toBe(2);
+    expect(refused.stdout).toBe('');
+    expect(refused.stderr).toContain('refusing to overwrite');
+    expect(fs.readFileSync(file, 'utf-8')).toBe('{"ignore":[{"ruleId":"capability/network-call"}]}\n');
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it.skipIf(process.platform === 'win32')('init does not write through a symlinked policy path', () => {
+    const base = fs.mkdtempSync(path.join(os.tmpdir(), 'casefile-cli-init-symlink-'));
+    const victim = path.join(base, 'victim.json');
+    fs.writeFileSync(victim, 'unchanged\n');
+    const dir = path.join(base, 'policy');
+    fs.mkdirSync(dir);
+    fs.symlinkSync(victim, path.join(dir, 'casefile.config.json'));
+    const refused = run(['init', dir]);
+    expect(refused.status).toBe(2);
+    expect(refused.stderr).toContain('refusing to overwrite');
+    expect(fs.readFileSync(victim, 'utf-8')).toBe('unchanged\n');
+    fs.rmSync(base, { recursive: true, force: true });
   });
 
   it('records and lists scan history', () => {

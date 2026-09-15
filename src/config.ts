@@ -153,6 +153,30 @@ function parseConfig(file: string, source: 'explicit' | 'artifact-legacy'): Case
   }
 }
 
+/**
+ * Starter operator policy written by `casefile init`. The parser ignores every
+ * top-level key except `ignore` and every entry key except `ruleId` and
+ * `path`, so `$comment` and per-entry `reason` carry documentation without
+ * changing behavior. The starter suppresses nothing.
+ */
+export function renderStarterConfig(): string {
+  const starter = {
+    $comment: [
+      'Casefile operator-owned suppression policy. Pass it explicitly on every command:',
+      '  casefile scan <artifact> --config casefile.config.json --strict --fail-on warning',
+      '  casefile lock <artifact> --config casefile.config.json --strict --out <outside-artifact>/name.casefile-lock.json',
+      '  casefile verify <artifact> --config casefile.config.json --strict --lock <outside-artifact>/name.casefile-lock.json',
+      'A copy of this file inside the artifact is untrusted by default; only the file passed with --config suppresses findings.',
+      'Each "ignore" entry needs "ruleId" (for example "capability/network-call") and may set "path", a relative-path prefix under the artifact root (not a glob), and "reason", which Casefile ignores but reviewers read.',
+      'Suppressed findings stay in the report as reviewed evidence; they only stop counting toward the --fail-on gate.',
+      'The exact bytes of this file enter the report identity, so any edit is policy drift that `casefile verify` reports.',
+      'Keys other than "ignore", including this "$comment", are ignored by the parser.',
+    ],
+    ignore: [],
+  };
+  return JSON.stringify(starter, null, 2) + '\n';
+}
+
 export function loadConfig(artifactRoot: string, options: LoadConfigOptions = {}): CasefileConfig {
   const artifactConfig = findArtifactConfig(artifactRoot);
   if (options.configPath !== undefined) {

@@ -1,0 +1,95 @@
+name: Casefile
+description: >-
+  Static, no-execution admission scan for Claude Code skills, plugins, and
+  marketplaces. Produces a deterministic JSON report and SARIF, optionally
+  verifies a reviewed lock for drift, and appends a summary to the job. The
+  scanned artifact is never executed.
+author: Luka Živković
+branding:
+  icon: shield
+  color: purple
+
+inputs:
+  path:
+    description: Artifact directory to scan (a skill, plugin, or marketplace root).
+    required: false
+    default: .
+  config:
+    description: Operator-owned suppression policy passed as --config. Leave empty for no suppressions.
+    required: false
+    default: ''
+  version:
+    description: Published casefile version run through `npx --yes casefile@<version>`. Pin it.
+    required: false
+    default: 0.2.1
+  fail-on:
+    description: 'Severity gate: critical, warning, or none.'
+    required: false
+    default: warning
+  strict:
+    description: Pass --strict so incomplete analysis fails closed. Keep it identical across scan, lock, and verify.
+    required: false
+    default: 'true'
+  sarif:
+    description: Also write SARIF 2.1.0 and expose its path as the `sarif` output.
+    required: false
+    default: 'true'
+  lock:
+    description: >-
+      Path to a reviewed lock written by `casefile lock`. When set, the action
+      also runs `casefile verify` and fails on any evidence drift.
+    required: false
+    default: ''
+  upload-sarif:
+    description: >-
+      Upload the SARIF file to GitHub code scanning with
+      github/codeql-action/upload-sarif. The calling job must grant
+      `security-events: write`; an action cannot grant permissions itself.
+    required: false
+    default: 'false'
+
+outputs:
+  exit-code:
+    description: 0 gate passed and no drift; 1 gate failed or lock drifted; 2 operational error.
+    value: ${{ steps.casefile.outputs.exit-code }}
+  report-json:
+    description: Path to the deterministic JSON report (empty if the scan could not run).
+    value: ${{ steps.casefile.outputs.report-json }}
+  sarif:
+    description: Path to the SARIF 2.1.0 file (empty when `sarif` is false or the scan could not run).
+    value: ${{ steps.casefile.outputs.sarif }}
+
+runs:
+  using: composite
+  steps:
+    - name: Run Casefile
+      id: casefile
+      shell: bash
+      env:
+        CASEFILE_PATH: ${{ inputs.path }}
+        CASEFILE_CONFIG: ${{ inputs.config }}
+        CASEFILE_VERSION: ${{ inputs.version }}
+        CASEFILE_FAIL_ON: ${{ inputs.fail-on }}
+        CASEFILE_STRICT: ${{ inputs.strict }}
+        CASEFILE_SARIF: ${{ inputs.sarif }}
+        CASEFILE_LOCK: ${{ inputs.lock }}
+      # The script records its exit code as an output; the gate step below
+      # fails the job after the optional SARIF upload has run.
+      run: bash "${GITHUB_ACTION_PATH}/scripts/action-run.sh" || true
+
+    - name: Upload SARIF to GitHub code scanning
+      if: ${{ inputs.upload-sarif == 'true' && steps.casefile.outputs.sarif != '' }}
+      uses: github/codeql-action/upload-sarif@v4
+      with:
+        sarif_file: ${{ steps.casefile.outputs.sarif }}
+
+    - name: Apply the Casefile gate
+      shell: bash
+      env:
+        CASEFILE_EXIT_CODE: ${{ steps.casefile.outputs.exit-code }}
+      run: |
+        code="${CASEFILE_EXIT_CODE:-2}"
+        if [ "$code" != "0" ]; then
+          echo "casefile: failing the job with exit code $code" >&2
+          exit "$code"
+        fi

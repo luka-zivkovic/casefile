@@ -2,9 +2,9 @@
 
 # Casefile
 
-### Inspect an agent skill before you install it.
+### Reviewed admission for agent skills: scan without executing, lock what you approved, verify it has not drifted.
 
-Statically inspect Claude Code skills, plugins, and marketplaces **without executing them**.
+Deterministic, no-execution trust intake for Claude Code skills, plugins, and marketplaces.
 
 <p>
   <a href="https://www.npmjs.com/package/casefile"><img alt="npm version" src="https://img.shields.io/npm/v/casefile?style=flat-square&color=4f46e5"></a>
@@ -17,7 +17,7 @@ Statically inspect Claude Code skills, plugins, and marketplaces **without execu
 
 </div>
 
-Casefile gives operators a reviewable record of what an agent capability contains, what it appears able to do, and whether it has changed since approval.
+Casefile reads the bytes of an agent capability and **never runs them**. From those bytes and an operator-owned policy it produces a **reproducible artifact identity and findings** you can review, lets you **lock the exact approved state**, and later **verifies drift** in bytes, policy, findings, report identity, or tool version. It emits **SARIF 2.1.0** and deterministic JSON for CI. Findings are review signals, not verdicts: they describe observable static evidence, not author intent, and a clean scan is not proof of safety.
 
 > [!IMPORTANT]
 > Casefile never executes the artifact it scans. It uses static analysis to raise useful review signals and block obvious risks. It cannot prove that an artifact is behaviorally safe.
@@ -33,12 +33,25 @@ Casefile gives operators a reviewable record of what an agent capability contain
 
 | | |
 |---|---|
+| **Executes scanned code** | **Never.** Hooks, scripts, imports, installers, and commands in the artifact are read, not run |
+| **Reproducible** | Same readable bytes, policy, and coverage evidence produce the same content hash, findings, and report identity regardless of path or time |
+| **Lock and verify** | `lock` records the approved state; `verify` classifies later drift in artifact bytes, policy, individual findings, report identity, and tool/report version |
+| **Explicit gaps** | Unreadable, invalid UTF-8, oversized, or skipped files are reported as findings; `--strict` fails closed |
+| **Operator-owned policy** | Suppressions come from a policy you pass with `--config`, never from the artifact by default; the artifact cannot weaken its own scan |
+| **Produces** | Human-readable reports, deterministic JSON, SARIF 2.1.0, and a composite GitHub Action |
 | **Scans** | Skills, plugins, and marketplace roots |
 | **Finds** | Suspicious hooks, secret access, network calls, injection patterns, unsafe filesystem behavior, supply-chain issues, and structural problems |
-| **Produces** | Human-readable reports, deterministic JSON, and SARIF 2.1.0 |
-| **Tracks** | Artifact bytes, findings, policy, tool version, and evidence drift |
-| **Executes scanned code** | **Never** |
 | **Runtime** | Node.js 20 or newer |
+
+### Casefile is not
+
+Drawn from the [product charter](./PRODUCT.md), so the boundary is visible before you adopt it:
+
+- **not a judge of LLM output quality**, and not a decision about whether a prompt, model, or application change should ship;
+- **not proof that untrusted code is behaviorally safe** after execution, because it never executes anything;
+- **not a runtime proxy**, MCP interceptor, or serving-path guardrail;
+- **not a skill authoring, optimization, or automatic remediation tool**;
+- **not a claim that zero findings means safe.** Static analysis can miss dynamic or deliberately concealed behavior.
 
 ## Install with your coding agent
 
@@ -173,9 +186,46 @@ Untrusted text is sanitized before it appears in terminal output, so a scanned a
 
 ## Use it in CI
 
-### Unreviewed or third-party artifacts
+### GitHub Action
 
-This GitHub Actions job fails on warnings, uploads SARIF, and avoids writing to the local scan-history database:
+The repository ships a composite Action. It runs `npx --yes casefile@<version> scan` (and `verify` when you pass a lock), never executes the scanned artifact, writes the JSON report and SARIF outside the checkout, exposes them as outputs, and appends severity counts plus the top findings with `file:line` to the job summary:
+
+```yaml
+name: Casefile
+
+on: [push, pull_request]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # only required with upload-sarif: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: luka-zivkovic/casefile@main
+        with:
+          path: ./plugin
+          fail-on: warning
+          upload-sarif: true
+```
+
+| Input | Default | Meaning |
+|---|---|---|
+| `path` | `.` | Artifact directory to scan |
+| `config` | | Operator-owned suppression policy passed as `--config` |
+| `version` | `0.2.1` | Published `casefile` version run through `npx --yes casefile@<version>`; pin it |
+| `fail-on` | `warning` | Severity gate: `critical`, `warning`, or `none` |
+| `strict` | `true` | Pass `--strict` so incomplete analysis fails closed |
+| `sarif` | `true` | Also write SARIF 2.1.0 and expose it as the `sarif` output |
+| `lock` | | Lock file; when set the Action also runs `verify` and fails on drift |
+| `upload-sarif` | `false` | Upload the SARIF to GitHub code scanning; the calling job must grant `security-events: write` because an Action cannot grant permissions itself |
+
+Outputs: `exit-code` (`0` gate passed and no drift, `1` gate failed or lock drifted, `2` operational error), `report-json` (path to the JSON report), and `sarif` (path to the SARIF file, empty when `sarif: false`). The Action needs Node.js 20 or newer on the runner; add `actions/setup-node` if your image lacks it. `@main` tracks the default branch; pin a tag or commit SHA once you depend on it.
+
+### Hand-rolled workflow
+
+If you prefer to call the CLI directly, this job fails on warnings, uploads SARIF, and avoids writing to the local scan-history database:
 
 ```yaml
 name: Casefile
@@ -230,7 +280,18 @@ npx --no-install casefile lock ./skills/example \
 
 The first command must pass, and a human must review its warnings and the artifact diff before accepting the new lock. The second command records the reviewed bytes and evidence; it does **not** apply the severity gate and therefore cannot replace the first command. Run both against a stable checkout because `lock` performs its own scan. Commit the candidate lock with the artifact change, then have the designated owner review the final lock-bearing commit.
 
-Commit the lock outside the scanned artifact, then require both checks in CI:
+Commit the lock outside the scanned artifact, then require both checks in CI. With the Action, the `lock` input adds the `verify` step and `fail-on: critical` keeps warnings visible but non-blocking:
+
+```yaml
+      - uses: luka-zivkovic/casefile@main
+        with:
+          path: ./skills/example
+          version: 0.2.1
+          fail-on: critical
+          lock: ./.casefile/locks/example.casefile-lock.json
+```
+
+The `version` input pins the published release but resolves it through npm at run time rather than through your committed `package-lock.json`. When you need lockfile integrity for the scanner itself, use the pinned-dependency workflow instead:
 
 ```yaml
 name: Reviewed skill
@@ -292,7 +353,9 @@ casefile scan ./plugin \
   --fail-on warning
 ```
 
-`ruleId` is required. `path` is an optional relative-path prefix, not a glob. Suppressed findings remain in the report as reviewed evidence but do not count toward the exit-code gate.
+`ruleId` is required. `path` is an optional relative-path prefix, not a glob. Suppressed findings remain in the report as reviewed evidence but do not count toward the exit-code gate. Keys other than `ignore` (for example `$comment`) and entry keys other than `ruleId` and `path` (for example `reason`) are ignored, so a policy can carry its own documentation.
+
+`casefile init [dir]` writes a documented starter `casefile.config.json` with an empty `ignore` list. It refuses to overwrite an existing file, and it never creates a lock: locks come only from `casefile lock` after review. Policy bytes are part of the report identity, so editing the policy is a reviewable change that `verify` reports as policy drift.
 
 Artifact-local `casefile.config.json` and legacy `skillguard.config.json` files are untrusted by default: they are hashed and reported, but they cannot weaken their own scan. `--trust-artifact-config` exists only for explicitly trusted legacy workflows.
 
@@ -324,6 +387,10 @@ casefile verify <path>
 casefile history <path>
   --db <path>               SQLite history store
   --json                    emit JSON rows
+
+casefile init [dir]
+  writes a documented starter casefile.config.json into dir (default: .)
+  refuses to overwrite; never creates a lock
 ```
 
 Run `casefile <command> --help` for the complete command help.
@@ -332,9 +399,9 @@ Run `casefile <command> --help` for the complete command help.
 
 | Code | Meaning |
 |---:|---|
-| `0` | Gate passed, lock written, or verification matched |
+| `0` | Gate passed, lock written, starter policy written, or verification matched |
 | `1` | Finding gate failed or a valid lock has evidence drift |
-| `2` | Invalid input, tampered lock, unsafe output path, or I/O failure |
+| `2` | Invalid input, tampered lock, unsafe output path, existing file that `init` refused to overwrite, or I/O failure |
 
 ## Evidence and reproducibility
 

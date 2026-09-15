@@ -10,6 +10,7 @@
 import { Command, Option } from 'commander';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { CONFIG_FILENAME, renderStarterConfig } from './config.js';
 import { DiscoveryError } from './discover.js';
 import { createLock, LockValidationError, parseLock, verifyArtifact } from './lock.js';
 import { atomicWriteText, validateExternalDestination, type SafeDestination } from './output.js';
@@ -205,6 +206,40 @@ program
       console.error(`casefile: ${errorMessage(error)}`);
       process.exitCode = 2;
     }
+  });
+
+program
+  .command('init')
+  .description(`write a documented starter ${CONFIG_FILENAME} operator policy (never a lock)`)
+  .argument('[dir]', 'directory to write the policy into', '.')
+  .action((dir: string) => {
+    const directory = path.resolve(dir);
+    const target = path.join(directory, CONFIG_FILENAME);
+    try {
+      fs.mkdirSync(directory, { recursive: true });
+      // 'wx' refuses to overwrite an existing file or follow an existing symlink.
+      const fd = fs.openSync(target, 'wx', 0o644);
+      try {
+        fs.writeFileSync(fd, renderStarterConfig(), 'utf-8');
+      } finally {
+        fs.closeSync(fd);
+      }
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      const message =
+        code === 'EEXIST'
+          ? `refusing to overwrite existing ${target}; edit it in place or choose another directory`
+          : `could not write ${target}: ${(error as Error).message}`;
+      console.error(`casefile: ${message}`);
+      process.exitCode = 2;
+      return;
+    }
+    console.log(`casefile init: wrote ${target}`);
+    console.log('- It suppresses nothing until you add "ignore" entries; each needs a "ruleId" and may set a "path" prefix.');
+    console.log(`- Pass it explicitly: casefile scan <artifact> --config ${target} --strict --fail-on warning`);
+    console.log('- A copy inside the artifact is untrusted by default; only the file passed with --config applies.');
+    console.log('- No lock was created. Locks come only from `casefile lock` after you have reviewed a passing scan.');
+    process.exitCode = 0;
   });
 
 program
