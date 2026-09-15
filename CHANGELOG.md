@@ -4,6 +4,11 @@ All notable changes to Casefile are recorded here.
 
 ## Unreleased
 
+- Added a Claude Code plugin marketplace layout (`.claude-plugin/marketplace.json`
+  and `plugins/casefile`) with an `inspect-skill` skill, so a coding agent can
+  install Casefile in one line and scan an artifact before installing it. The
+  README documents the install commands, a paste-a-prompt alternative for other
+  agents, and Overclock's CI use of Casefile as a gate.
 - Added public contribution and security-reporting guidance.
 - Documented a lock-first CI workflow for reviewed internal capabilities, with
   exact tool pinning and separate severity and evidence-drift checks.

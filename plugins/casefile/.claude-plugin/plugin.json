@@ -1,0 +1,22 @@
+{
+  "name": "casefile",
+  "displayName": "Casefile",
+  "description": "Inspect an agent skill, plugin, or marketplace before you install it. The bundled inspect-skill skill runs a Casefile static scan (npx casefile@latest scan) over a directory without executing it, reads the report, keeps every finding tied to a file and line, explains findings as review signals rather than verdicts, and offers lock/verify for drift on reviewed artifacts. It asks before installing anything.",
+  "version": "0.2.1",
+  "author": {
+    "name": "Luka Zivkovic"
+  },
+  "license": "MIT",
+  "keywords": [
+    "security",
+    "audit",
+    "static-analysis",
+    "supply-chain",
+    "prompt-injection",
+    "skills",
+    "plugins",
+    "marketplace",
+    "sarif",
+    "lockfile"
+  ]
+}

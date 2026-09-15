@@ -13,7 +13,7 @@ Statically inspect Claude Code skills, plugins, and marketplaces **without execu
   <img alt="Node 20 or newer" src="https://img.shields.io/node/v/casefile?style=flat-square">
 </p>
 
-[Quick start](#quick-start) · [How it works](#how-it-works) · [CI](#use-it-in-ci) · [CLI reference](#cli-reference) · [Security](#security-model) · [Documentation](#documentation)
+[Install with your coding agent](#install-with-your-coding-agent) · [Quick start](#quick-start) · [How it works](#how-it-works) · [CI](#use-it-in-ci) · [CLI reference](#cli-reference) · [Security](#security-model) · [Documentation](#documentation)
 
 </div>
 
@@ -39,6 +39,23 @@ Casefile gives operators a reviewable record of what an agent capability contain
 | **Tracks** | Artifact bytes, findings, policy, tool version, and evidence drift |
 | **Executes scanned code** | **Never** |
 | **Runtime** | Node.js 20 or newer |
+
+## Install with your coding agent
+
+The repository is also a Claude Code plugin marketplace. From a Claude Code session, add it and install the `casefile` plugin:
+
+```text
+/plugin marketplace add luka-zivkovic/casefile
+/plugin install casefile@casefile
+```
+
+The plugin ships one skill, `inspect-skill`, which teaches the agent to run `npx casefile@latest scan` on a directory before you install it, read the report, keep every finding tied to a file and line, explain findings as review signals rather than verdicts, and offer `lock`/`verify` for drift on a reviewed artifact. It asks before installing anything and never executes the artifact.
+
+Using Codex or another agent? Paste this prompt instead:
+
+> Read https://github.com/luka-zivkovic/casefile README and run `npx casefile@latest scan` on `<path>` before I install it.
+
+Casefile already gates a real marketplace: the [Overclock](https://github.com/luka-zivkovic/overclock) plugin marketplace runs it over its own plugins as a CI gate ([`.github/workflows/casefile.yml`](https://github.com/luka-zivkovic/overclock/blob/master/.github/workflows/casefile.yml)).
 
 ## Quick start
 
