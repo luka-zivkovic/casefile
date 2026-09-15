@@ -383,7 +383,7 @@ npm test
 npm run benchmark --silent
 ```
 
-CI runs the build, 172-test suite, and authored benchmark on Node.js 20 and 22. See [CONTRIBUTING.md](./CONTRIBUTING.md) before proposing a change.
+CI runs the build, the full test suite, and the authored benchmark on Node.js 20 and 22. See [CONTRIBUTING.md](./CONTRIBUTING.md) before proposing a change.
 
 ## License
 

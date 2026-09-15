@@ -11,6 +11,10 @@ All notable changes to Casefile are recorded here.
   repository; comparative evidence belongs to the separately governed neutral
   benchmark workflow.
 - Documented npm-first installation in the README.
+- Corrected stale documentation: the README no longer hardcodes a test count,
+  and the launch kit no longer repeats the resolved naming step or links to the
+  removed exploratory scan reports; comparative evidence is pointed at the
+  neutral benchmark workflow instead.
 
 ## 0.2.1 — 2026-08-24
 

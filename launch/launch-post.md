@@ -1,6 +1,8 @@
 # We scanned 16 popular Claude Code plugin collections. Here's what installing them actually pulls in.
 
-_Draft. Replace "casefile" with the final product name before publishing._
+_Draft. The exploratory per-repo scan reports this post was written from are no longer kept in
+this repository; comparative evidence is governed by the neutral benchmark workflow in
+[ADR-0002](../docs/decisions/0002-neutral-benchmark-ownership.md)._
 
 Claude Code plugins and skills are `git clone` plus a bit of trust. You add a marketplace, install
 a plugin, and from then on it can register hooks that run on every session, ship scripts that make
@@ -32,7 +34,8 @@ can't, because it's buried:
   you get all of it. This is the supply-chain shape that matters: you're not trusting one author,
   you're trusting everyone they bundled.
 
-Full per-repo reports are in the repo. Every finding has a file and line number.
+Every finding carries a file and line number, so it can be checked against a pinned checkout of
+the repository it came from.
 
 ## What "clean" and "flagged" mean here
 
@@ -45,9 +48,10 @@ front of you, not to decide what they mean.
 Second: **it has false positives, and we'll show you ours.** A skill that teaches the skill format
 mentions example paths that don't exist, and our scanner flagged them as missing dependencies. A
 CSS parser using a template literal got flagged as reading a secret. We found these by running on
-real code, fixed three of them before publishing, and left the judgment-call ones in the reports
-labeled as such. Scanning security-education content that quotes "ignore previous instructions" will
-always light up — a static tool can't tell quoting from injecting. That's what the human is for.
+real code, fixed three of them before publishing, and treated the judgment-call ones as review
+signals rather than verdicts. Scanning security-education content that quotes "ignore previous
+instructions" will always light up — a static tool can't tell quoting from injecting. That's what
+the human is for.
 
 We told the maintainers of the three named repos what we found before writing this. That's the
 deal for a tool like this: you get the heads-up before the internet does.
@@ -62,5 +66,5 @@ It runs locally, reads only what's on disk, needs no credentials, and prints a r
 codes you can wire into CI. Point it at a plugin before you install it, or at your own before you
 publish it.
 
-The scanning you just read about took under four seconds per repo. The reading you'd have had to
-do by hand is why nobody does it.
+The scanning you just read about took seconds per repo, running locally. The reading you'd have
+had to do by hand is why nobody does it.
