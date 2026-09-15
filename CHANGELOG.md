@@ -4,6 +4,23 @@ All notable changes to Casefile are recorded here.
 
 ## Unreleased
 
+- Repositioned the README to lead with reviewed admission plus lock and
+  verify: no execution, reproducible identity and findings, explicit coverage
+  gaps, operator-owned policy, drift verification, and SARIF for CI. Added a
+  "Casefile is not" boundary list drawn from `PRODUCT.md`. Detection rules
+  remain documented below the lifecycle story.
+- Added `casefile init [dir]`, which writes a documented starter
+  `casefile.config.json` operator policy with an empty `ignore` list. It
+  refuses to overwrite an existing file and never creates a lock.
+- Added a composite GitHub Action (`uses: luka-zivkovic/casefile@main`) with
+  `scripts/action-run.sh`. It runs the published CLI through `npx --yes
+  casefile@<version>`, writes JSON and SARIF outside the artifact, optionally
+  verifies a reviewed lock and fails on drift, exposes `exit-code`,
+  `report-json`, and `sarif` outputs, and appends severity counts plus top
+  findings with `file:line` to the job summary. SARIF upload is opt-in and
+  requires the caller to grant `security-events: write`.
+- The `inspect-skill` plugin skill now points operators at `casefile init`
+  for a starter policy while still refusing to write policy for the artifact.
 - Added a Claude Code plugin marketplace layout (`.claude-plugin/marketplace.json`
   and `plugins/casefile`) with an `inspect-skill` skill, so a coding agent can
   install Casefile in one line and scan an artifact before installing it. The
