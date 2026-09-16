@@ -4,6 +4,10 @@ All notable changes to Casefile are recorded here.
 
 ## Unreleased
 
+- The GitHub Action now defaults `fail-on` to `critical`, matching the CLI, so
+  warnings such as a bundled script's network call stay visible in the report
+  and job summary without failing the job; set `fail-on: warning` to gate on
+  them.
 - Repositioned the README to lead with reviewed admission plus lock and
   verify: no execution, reproducible identity and findings, explicit coverage
   gaps, operator-owned policy, drift verification, and SARIF for CI. Added a

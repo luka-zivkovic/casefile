@@ -23,9 +23,12 @@ inputs:
     required: false
     default: 0.2.1
   fail-on:
-    description: 'Severity gate: critical, warning, or none.'
+    description: >-
+      Severity gate: critical, warning, or none. The default matches the CLI:
+      only critical findings fail the job; warnings stay visible in the report
+      and job summary without blocking. Set `warning` to gate on them too.
     required: false
-    default: warning
+    default: critical
   strict:
     description: Pass --strict so incomplete analysis fails closed. Keep it identical across scan, lock, and verify.
     required: false
