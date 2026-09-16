@@ -12,7 +12,7 @@
 #   CASEFILE_PATH        artifact directory (default .)
 #   CASEFILE_CONFIG      operator-owned policy passed as --config (optional)
 #   CASEFILE_VERSION     published casefile version for `npx --yes casefile@<v>`
-#   CASEFILE_FAIL_ON     critical | warning | none (default warning)
+#   CASEFILE_FAIL_ON     critical | warning | none (default critical, like the CLI)
 #   CASEFILE_STRICT      "true" adds --strict (default true)
 #   CASEFILE_SARIF       "true" also writes SARIF (default true)
 #   CASEFILE_LOCK        lock file; when set, `verify` also runs and drift fails
@@ -28,7 +28,7 @@ set -u -o pipefail
 artifact="${CASEFILE_PATH:-.}"
 config="${CASEFILE_CONFIG:-}"
 version="${CASEFILE_VERSION:-}"
-fail_on="${CASEFILE_FAIL_ON:-warning}"
+fail_on="${CASEFILE_FAIL_ON:-critical}"
 strict="${CASEFILE_STRICT:-true}"
 want_sarif="${CASEFILE_SARIF:-true}"
 lock="${CASEFILE_LOCK:-}"

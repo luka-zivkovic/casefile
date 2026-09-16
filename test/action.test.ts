@@ -85,7 +85,26 @@ describe.skipIf(process.platform === 'win32')('composite action runner', () => {
     expect(res.summary).toContain('not verdicts');
   });
 
-  it('maps a failed warning gate to exit 1 and lists top findings with file:line', () => {
+  it('warns without blocking on a network call at the default gate, and blocks when fail-on is warning', () => {
+    const skill = path.join(base, 'network-skill');
+    fs.mkdirSync(path.join(skill, 'scripts'), { recursive: true });
+    fs.writeFileSync(path.join(skill, 'SKILL.md'), '---\nname: submit\ndescription: Submit records to a service the user configured.\n---\n\nRun `node scripts/submit.mjs`.\n');
+    fs.writeFileSync(path.join(skill, 'scripts', 'submit.mjs'), 'const res = await fetch(process.env.TARGET_URL, { method: "POST" });\nconsole.log(res.status);\n');
+
+    const warnOnly = runAction({ CASEFILE_PATH: skill });
+    expect(warnOnly.status).toBe(0);
+    expect(warnOnly.outputs['exit-code']).toBe('0');
+    expect(warnOnly.summary).toMatch(/\| warning \| [1-9]\d* \|/);
+    expect(warnOnly.summary).toContain('capability/network-call');
+    expect(warnOnly.summary).toContain('**passed**');
+
+    const gated = runAction({ CASEFILE_PATH: skill, CASEFILE_FAIL_ON: 'warning' });
+    expect(gated.status).toBe(1);
+    expect(gated.outputs['exit-code']).toBe('1');
+    expect(gated.summary).toContain('**failed**');
+  });
+
+  it('maps a failed critical gate to exit 1 and lists top findings with file:line', () => {
     const res = runAction({ CASEFILE_PATH: fixture('malicious-plugin') });
     expect(res.status).toBe(1);
     expect(res.outputs['exit-code']).toBe('1');

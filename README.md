@@ -206,16 +206,17 @@ jobs:
       - uses: luka-zivkovic/casefile@main
         with:
           path: ./plugin
-          fail-on: warning
           upload-sarif: true
 ```
+
+By default only critical findings fail the job, the same gate as the CLI. Warnings such as a bundled script that makes a network call are expected for some skills, so they stay visible in the report and job summary without blocking; set `fail-on: warning` when you want them to gate as well.
 
 | Input | Default | Meaning |
 |---|---|---|
 | `path` | `.` | Artifact directory to scan |
 | `config` | | Operator-owned suppression policy passed as `--config` |
 | `version` | `0.2.1` | Published `casefile` version run through `npx --yes casefile@<version>`; pin it |
-| `fail-on` | `warning` | Severity gate: `critical`, `warning`, or `none` |
+| `fail-on` | `critical` | Severity gate: `critical`, `warning`, or `none`; warnings never block at the default |
 | `strict` | `true` | Pass `--strict` so incomplete analysis fails closed |
 | `sarif` | `true` | Also write SARIF 2.1.0 and expose it as the `sarif` output |
 | `lock` | | Lock file; when set the Action also runs `verify` and fails on drift |
