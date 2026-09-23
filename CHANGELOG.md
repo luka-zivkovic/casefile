@@ -4,6 +4,10 @@ All notable changes to Casefile are recorded here.
 
 ## Unreleased
 
+- Renamed the sibling evaluator-evidence product Coeval to Rubrist in
+  `PRODUCT.md`, `AGENTS.md`, and the vendored glossary and implementation
+  batches (owner decision, 2026-09-22). Casefile's name, CLI, and outputs are
+  unchanged; `launch/` drafts stay as historical material.
 - The GitHub Action now defaults `fail-on` to `critical`, matching the CLI, so
   warnings such as a bundled script's network call stay visible in the report
   and job summary without failing the job; set `fail-on: warning` to gate on
