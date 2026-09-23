@@ -76,7 +76,7 @@ proof that an admitted artifact is behaviorally safe.
 
 ## Relationship to the other products
 
-- **Coeval** validates behavioral evaluators against human truth. Casefile may
+- **Rubrist** validates behavioral evaluators against human truth. Casefile may
   statically inspect a packaged evaluator or skill, but it does not certify
   the evaluator's judgment quality.
 - **Dailies** makes release decisions. It may consume Casefile evidence as one

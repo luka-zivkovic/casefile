@@ -31,7 +31,7 @@ Casefile performs deterministic, no-execution trust intake for agent
 capability artifacts. It owns static findings, reproducible artifact identity,
 operator policy, SARIF, lock/verify, and honest benchmark evidence. It does not
 execute untrusted artifacts, proxy runtime traffic, evaluate LLM output, or
-make release decisions. Coeval owns governed evaluator evidence. Dailies owns
+make release decisions. Rubrist owns governed evaluator evidence. Dailies owns
 release decisions.
 
 The authored corpus is regression-only; competitor claims require a separate
