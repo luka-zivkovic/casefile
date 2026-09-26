@@ -84,7 +84,7 @@ export function contentHashResult(root: string, walked: WalkResult = walkArtifac
     return 0;
   });
   gaps.sort((a, b) => a.rel.localeCompare(b.rel) || a.kind.localeCompare(b.kind));
-  return { digest: sha256(JSON.stringify({ schema: 'casefile-artifact-content/v2', entries })), gaps };
+  return { digest: sha256(JSON.stringify({ schema: 'casefile-artifact-content/v1', entries })), gaps };
 }
 
 export function contentHash(root: string): string {

@@ -34,6 +34,13 @@ In Rubrist's Batch 8G, every versioned identifier in Casefile restarts at v1:
 
 Casefile's runtime behaviour doesn't otherwise change in Batch 8.
 
+## Implementation
+
+Done in Batch 8G (2026-09-27): `REPORT_VERSION` is 1 and the content-hash
+basis is `casefile-artifact-content/v1`. No committed fixture or lock derived
+from the old values, so none needed regenerating; tests compute digests as
+they run.
+
 ## Consequences
 
 - Locks and digests produced before the baseline stop matching. This is

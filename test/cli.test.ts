@@ -34,7 +34,7 @@ describe('casefile CLI', () => {
     const res = run(['scan', fixture('benign-skill'), '--json', '--db', tmpDb]);
     expect(res.status).toBe(0);
     const report = JSON.parse(res.stdout);
-    expect(report.reportVersion).toBe(2);
+    expect(report.reportVersion).toBe(1);
     expect(report.summary.critical).toBe(0);
   });
 
