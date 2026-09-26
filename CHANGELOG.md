@@ -4,6 +4,13 @@ All notable changes to Casefile are recorded here.
 
 ## Unreleased
 
+- Launch baseline (ADR-0003): the report version restarts at 1 and the
+  artifact content hash uses the `casefile-artifact-content/v1` basis, so
+  every digest and lock changes. Locks from earlier builds report drift;
+  `casefile verify` now names tool and report-version drift in its text
+  output. The next release bumps the package, tool, plugin, and action
+  versions together.
+
 - Renamed the sibling evaluator-evidence product Coeval to Rubrist in
   `PRODUCT.md`, `AGENTS.md`, and the vendored glossary and implementation
   batches (owner decision, 2026-09-22). Casefile's name, CLI, and outputs are

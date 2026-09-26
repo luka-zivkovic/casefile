@@ -11,7 +11,7 @@ function sha256(content: string | Buffer): string {
   return createHash('sha256').update(content).digest('hex');
 }
 
-/** The ambiguous pre-v2 framing retained only to prove the regression. */
+/** The unnamed line framing that came before the canonical JSON basis, retained only to prove the regression. */
 function legacyContentHash(root: string): string {
   const lines = fs
     .readdirSync(root)
@@ -93,5 +93,14 @@ describe('artifact content hash framing', () => {
     fs.symlinkSync('/different/worktree/one', path.join(first, '.git'));
     fs.symlinkSync('/different/worktree/two', path.join(second, '.git'));
     expect(contentHash(first)).toBe(contentHash(second));
+  });
+});
+
+describe('the content-hash basis', () => {
+  it('is casefile-artifact-content/v1 over the sorted entries', () => {
+    const dir = tempDir('casefile-basis-');
+    fs.writeFileSync(path.join(dir, 'a'), 'x');
+    const expected = sha256(JSON.stringify({ schema: 'casefile-artifact-content/v1', entries: [['a', 'file', sha256('x')]] }));
+    expect(contentHash(dir)).toBe(expected);
   });
 });

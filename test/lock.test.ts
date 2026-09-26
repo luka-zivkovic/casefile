@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -163,6 +164,17 @@ describe('canonical evidence locks', () => {
     expect(changedPolicyBytes.drift.policy.changed).toBe(true);
     expect(changedPolicyBytes.drift.reportIdentity.changed).toBe(true);
     expect(changedPolicyBytes.drift.findings).toEqual({ added: [], removed: [], changed: [] });
+  });
+
+  it('reports a lock written under another report version as drift', () => {
+    const dir = makeSkill();
+    const lock = createArtifactLock(dir);
+    const { digest: _digest, ...content } = structuredClone(lock);
+    const older = { ...content, reportVersion: 2 };
+    const relocked = { ...older, digest: { algorithm: 'sha256' as const, digest: createHash('sha256').update(canonicalLockContent(older)).digest('hex') } };
+    const verification = verifyArtifact(dir, relocked);
+    expect(verification.drift.reportVersion).toEqual({ changed: true, expected: 2, actual: 1 });
+    expect(verification.exact).toBe(false);
   });
 
   it('rejects a tampered lock before attempting to scan', () => {
