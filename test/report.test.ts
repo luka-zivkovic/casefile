@@ -22,7 +22,7 @@ describe('buildReport', () => {
   });
 
   it('emits a versioned schema', () => {
-    expect(report.reportVersion).toBe(2);
+    expect(report.reportVersion).toBe(1);
     expect(report.tool.name).toBe('casefile');
     expect(report.artifact).toEqual(artifact);
     expect(report.policy).toEqual({ source: 'none', strict: false });

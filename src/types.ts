@@ -45,7 +45,7 @@ export interface ReportIdentity {
 }
 
 export interface Report {
-  reportVersion: 2;
+  reportVersion: 1;
   tool: { name: string; version: string };
   scannedAt: string;
   artifact: Artifact;

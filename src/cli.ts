@@ -194,6 +194,8 @@ program
       } else {
         const findings = verification.drift.findings;
         console.log('casefile verify: drift detected');
+        console.log(`- tool: ${verification.drift.tool.changed ? 'changed' : 'unchanged'}`);
+        console.log(`- report version: ${verification.drift.reportVersion.changed ? 'changed' : 'unchanged'}`);
         console.log(`- artifact: ${verification.drift.artifact.changed ? 'changed' : 'unchanged'}`);
         console.log(`- policy: ${verification.drift.policy.changed ? 'changed' : 'unchanged'}`);
         console.log(`- report identity: ${verification.drift.reportIdentity.changed ? 'changed' : 'unchanged'}`);

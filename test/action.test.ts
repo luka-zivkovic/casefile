@@ -74,7 +74,7 @@ describe.skipIf(process.platform === 'win32')('composite action runner', () => {
     expect(res.status).toBe(0);
     expect(res.outputs['exit-code']).toBe('0');
     const report = JSON.parse(fs.readFileSync(res.outputs['report-json'], 'utf-8'));
-    expect(report.reportVersion).toBe(2);
+    expect(report.reportVersion).toBe(1);
     expect(report.policy.strict).toBe(true);
     const sarif = JSON.parse(fs.readFileSync(res.outputs.sarif, 'utf-8'));
     expect(sarif.version).toBe('2.1.0');

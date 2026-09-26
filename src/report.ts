@@ -3,7 +3,7 @@ import type { Artifact, Finding, Report, ReportPolicy, Severity } from './types.
 
 export const TOOL_NAME = 'casefile';
 export const TOOL_VERSION = '0.2.1';
-export const REPORT_VERSION = 2 as const;
+export const REPORT_VERSION = 1 as const;
 
 const SEVERITY_ORDER: Record<Severity, number> = { critical: 0, warning: 1, info: 2 };
 
